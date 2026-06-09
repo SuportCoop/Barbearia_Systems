@@ -1,0 +1,329 @@
+{% extends "barbearia/base.html" %}
+
+{% block title %}Painel do Desenvolvedor - Barbearia Benx{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header Banner -->
+    <div class="glass-card rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between shadow-xl relative overflow-hidden">
+        <div class="absolute -top-20 -left-20 w-48 h-48 bg-red-500/10 rounded-full blur-3xl"></div>
+        <div class="space-y-2 text-center md:text-left z-10">
+            <span class="text-xs font-semibold uppercase tracking-wider text-red-400 px-2.5 py-1 bg-red-500/10 rounded-full">Painel de Controle Geral</span>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight">Desenvolvedor</h1>
+            <p class="text-gray-400 max-w-md">Controle absoluto sobre o banco de dados. Cadastre produtos, serviços e resete o banco com dados de teste.</p>
+        </div>
+        <div class="mt-6 md:mt-0 z-10 flex flex-col sm:flex-row gap-3">
+            <a href="{% url 'criar_usuario' %}" class="px-5 py-3 rounded-xl font-bold bg-accentGold hover:bg-white text-obsidian shadow-lg hover:shadow-accentGold/20 transition flex items-center space-x-2 text-sm justify-center">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                <span>Novo Usuário</span>
+            </a>
+            <form action="{% url 'seed_database' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="w-full px-5 py-3 rounded-xl font-bold bg-gradient-to-r from-red-600 to-amberGold hover:from-amberGold hover:to-white text-white hover:text-obsidian shadow-lg hover:shadow-red-600/20 transition flex items-center space-x-2 text-sm justify-center">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.2" />
+                    </svg>
+                    <span>Semear Banco</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Global Stats -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        
+        <!-- Total Revenue -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4 col-span-1 sm:col-span-2 lg:col-span-1">
+            <div class="p-3 bg-accentGold/10 rounded-xl text-accentGold">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V7" />
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500 font-title">Faturamento Geral</span>
+                <span class="text-xl font-black text-accentGold">R$ {{ global_revenue }}</span>
+                <span class="block text-[8px] text-gray-500 leading-none mt-1">Cortes: R${{ service_revenue }} | Planos: R${{ plan_revenue }}</span>
+            </div>
+        </div>
+
+        <!-- Total Clients -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4">
+            <div class="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Clientes Ativos</span>
+                <span class="text-2xl font-black text-white font-title">{{ total_clients }}</span>
+            </div>
+        </div>
+
+        <!-- Total Barbers -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4">
+            <div class="p-3 bg-emerald-500/10 rounded-xl text-emerald-400">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Barbeiros</span>
+                <span class="text-2xl font-black text-white font-title">{{ total_barbers }}</span>
+            </div>
+        </div>
+
+        <!-- Bookings -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4">
+            <div class="p-3 bg-purple-500/10 rounded-xl text-purple-400">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Agendamentos</span>
+                <span class="text-2xl font-black text-white font-title">{{ total_bookings }}</span>
+            </div>
+        </div>
+
+        <!-- Products -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4">
+            <div class="p-3 bg-amber-500/10 rounded-xl text-amber-500">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Produtos</span>
+                <span class="text-2xl font-black text-white font-title">{{ total_products }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Entity Tabs & Management Forms -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left 2 Cols: Entity Tables -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg lg:col-span-2 space-y-8">
+            
+            <!-- Users List -->
+            <div class="space-y-3">
+                <h3 class="text-lg font-bold text-white font-title border-b border-white/5 pb-2">Contas de Usuário</h3>
+                <div class="overflow-x-auto max-h-[300px] custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs text-gray-300">
+                        <thead>
+                            <tr class="border-b border-white/5 text-gray-500 font-medium">
+                                <th class="pb-2">Username</th>
+                                <th class="pb-2">Nome Completo</th>
+                                <th class="pb-2">Papel / Função</th>
+                                <th class="pb-2">Telefone</th>
+                                <th class="pb-2 text-right">Plano</th>
+                                <th class="pb-2 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for prof in users %}
+                                <tr class="hover:bg-white/2 transition">
+                                    <td class="py-2.5 font-mono text-white">{{ prof.user.username }}</td>
+                                    <td class="py-2.5">{{ prof.user.get_full_name|default:"-" }}</td>
+                                    <td class="py-2.5">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase
+                                            {% if prof.role == 'DESENVOLVEDOR' %}
+                                                bg-red-500/10 text-red-400 border border-red-500/20
+                                            {% elif prof.role == 'BARBEIRO' %}
+                                                bg-emerald-500/10 text-emerald-400 border border-emerald-500/20
+                                            {% else %}
+                                                bg-blue-500/10 text-blue-400 border border-blue-500/20
+                                            {% endif %}">
+                                            {{ prof.role }}
+                                        </span>
+                                    </td>
+                                    <td class="py-2.5">{{ prof.phone|default:"-" }}</td>
+                                    <td class="py-2.5 text-right">
+                                        {% if prof.plan %}
+                                            <span class="text-accentGold font-semibold">{{ prof.plan.name }}</span>
+                                        {% else %}
+                                            <span class="text-gray-600">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-2.5 text-right space-x-2">
+                                        <a href="{% url 'editar_usuario' prof.user.id %}" class="text-accentGold hover:underline font-bold">Editar</a>
+                                        {% if prof.user != request.user %}
+                                            <a href="{% url 'deletar_usuario' prof.user.id %}" class="text-red-400 hover:underline" onclick="return confirm('Deseja realmente excluir este usuário?')">Remover</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Bookings List -->
+            <div class="space-y-3">
+                <h3 class="text-lg font-bold text-white font-title border-b border-white/5 pb-2">Todos os Agendamentos</h3>
+                <div class="overflow-x-auto max-h-[300px] custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs text-gray-300">
+                        <thead>
+                            <tr class="border-b border-white/5 text-gray-500 font-medium">
+                                <th class="pb-2">Data / Hora</th>
+                                <th class="pb-2">Cliente</th>
+                                <th class="pb-2">Barbeiro</th>
+                                <th class="pb-2">Serviço</th>
+                                <th class="pb-2 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for booking in bookings %}
+                                <tr class="hover:bg-white/2 transition">
+                                    <td class="py-2.5 text-white font-medium">{{ booking.date|date:"d/m/Y" }} - {{ booking.time|date:"H:i" }}</td>
+                                    <td class="py-2.5">{{ booking.client.get_full_name|default:booking.client.username }}</td>
+                                    <td class="py-2.5">{{ booking.barber.get_full_name|default:booking.barber.username }}</td>
+                                    <td class="py-2.5">{{ booking.service.name }}</td>
+                                    <td class="py-2.5 text-right">
+                                        {% if booking.status == "CONCLUIDO" %}
+                                            <span class="text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">✓ Atendido</span>
+                                        {% elif booking.status == "CANCELADO" %}
+                                            <span class="text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded">Cancelado</span>
+                                        {% else %}
+                                            <span class="text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded">Agendado</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right 1 Col: Management Sidebar (Products / Services creation) -->
+        <div class="space-y-6">
+            
+            <!-- Products CRUD Panel -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg space-y-4">
+                <h3 class="text-base font-bold text-white font-title border-b border-white/5 pb-2">Cadastrar Produto</h3>
+                
+                <form action="{% url 'criar_produto' %}" method="post" class="space-y-3 text-xs">
+                    {% csrf_token %}
+                    <div>
+                        <label for="id_prod_name" class="block text-gray-400 mb-1">Nome do Produto</label>
+                        <input type="text" name="name" id="id_prod_name" required
+                               class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="id_prod_price" class="block text-gray-400 mb-1">Preço (R$)</label>
+                            <input type="number" name="price" id="id_prod_price" step="0.01" required
+                                   class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                        </div>
+                        <div>
+                            <label for="id_prod_stock" class="block text-gray-400 mb-1">Estoque Inicial</label>
+                            <input type="number" name="stock" id="id_prod_stock" required
+                                   class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="id_prod_desc" class="block text-gray-400 mb-1">Descrição</label>
+                        <textarea name="description" id="id_prod_desc" rows="2"
+                                  class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold"></textarea>
+                    </div>
+                    <div>
+                        <label for="id_prod_img" class="block text-gray-400 mb-1">URL da Imagem</label>
+                        <input type="url" name="image_url" id="id_prod_img"
+                               placeholder="https://..."
+                               class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-accentGold text-obsidian font-bold rounded-lg hover:bg-white transition text-xs">
+                        Adicionar Produto
+                    </button>
+                </form>
+
+                <!-- Product Listing table -->
+                <div class="pt-4 border-t border-white/5 max-h-[200px] overflow-y-auto custom-scrollbar text-xs">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-gray-500 font-semibold border-b border-white/5">
+                                <th class="pb-1">Produto</th>
+                                <th class="pb-1">Estoque</th>
+                                <th class="pb-1 text-right">Preço</th>
+                                <th class="pb-1 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 text-gray-300">
+                            {% for p in products %}
+                                <tr>
+                                    <td class="py-2">{{ p.name }}</td>
+                                    <td class="py-2">{{ p.stock }} un</td>
+                                    <td class="py-2 text-right">R$ {{ p.price }}</td>
+                                    <td class="py-2 text-right">
+                                        <a href="{% url 'deletar_produto' p.id %}" class="text-red-400 hover:underline">Remover</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Services CRUD Panel -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg space-y-4">
+                <h3 class="text-base font-bold text-white font-title border-b border-white/5 pb-2">Cadastrar Serviço</h3>
+                
+                <form action="{% url 'criar_servico' %}" method="post" class="space-y-3 text-xs">
+                    {% csrf_token %}
+                    <div>
+                        <label for="id_serv_name" class="block text-gray-400 mb-1">Nome do Serviço</label>
+                        <input type="text" name="name" id="id_serv_name" required
+                               class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label for="id_serv_price" class="block text-gray-400 mb-1">Preço (R$)</label>
+                            <input type="number" name="price" id="id_serv_price" step="0.01" required
+                                   class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                        </div>
+                        <div>
+                            <label for="id_serv_duration" class="block text-gray-400 mb-1">Duração (minutos)</label>
+                            <input type="number" name="duration_minutes" id="id_serv_duration" required
+                                   class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-accentGold text-obsidian font-bold rounded-lg hover:bg-white transition text-xs">
+                        Adicionar Serviço
+                    </button>
+                </form>
+
+                <!-- Services Listing table -->
+                <div class="pt-4 border-t border-white/5 max-h-[200px] overflow-y-auto custom-scrollbar text-xs">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-gray-500 font-semibold border-b border-white/5">
+                                <th class="pb-1">Serviço</th>
+                                <th class="pb-1">Tempo</th>
+                                <th class="pb-1 text-right">Preço</th>
+                                <th class="pb-1 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 text-gray-300">
+                            {% for s in services %}
+                                <tr>
+                                    <td class="py-2">{{ s.name }}</td>
+                                    <td class="py-2">{{ s.duration_minutes }} min</td>
+                                    <td class="py-2 text-right">R$ {{ s.price }}</td>
+                                    <td class="py-2 text-right">
+                                        <a href="{% url 'deletar_servico' s.id %}" class="text-red-400 hover:underline">Remover</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

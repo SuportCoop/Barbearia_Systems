@@ -1,0 +1,121 @@
+{% extends "barbearia/base.html" %}
+
+{% block title %}Cadastro - Barbearia Benx{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-8">
+    <div class="glass-card rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+        <!-- Accent Glow -->
+        <div class="absolute -top-10 -right-10 w-32 h-32 bg-accentGold/10 rounded-full blur-2xl"></div>
+        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-accentGold/5 rounded-full blur-2xl"></div>
+
+        <div class="text-center mb-8 relative z-10">
+            <svg class="h-12 w-12 text-accentGold mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            <h2 class="text-2xl font-extrabold text-white tracking-tight font-title">Criar nova Conta</h2>
+            <p class="text-sm text-gray-400 mt-1">Cadastre-se para agendar cortes</p>
+        </div>
+
+        <form method="post" class="space-y-4 relative z-10">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Username -->
+            <div>
+                <label for="id_username" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Nome de Usuário (login)</label>
+                <input type="text" name="username" id="id_username" required autocomplete="username"
+                       class="block w-full px-3 py-2 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="Ex: joao_silva" value="{{ form.username.value|default:'' }}">
+                <span class="text-[10px] text-gray-500 block mt-1">Apenas letras, números e @/./+/-/_.</span>
+                {% if form.username.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.username.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- First Name & Last Name (Grid) -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="id_first_name" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Nome</label>
+                    <input type="text" name="first_name" id="id_first_name" required
+                           class="block w-full px-3 py-2 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="João" value="{{ form.first_name.value|default:'' }}">
+                    {% if form.first_name.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.first_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="id_last_name" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Sobrenome</label>
+                    <input type="text" name="last_name" id="id_last_name" required
+                           class="block w-full px-3 py-2 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="Silva" value="{{ form.last_name.value|default:'' }}">
+                    {% if form.last_name.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.last_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- E-mail -->
+            <div>
+                <label for="id_email" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">E-mail</label>
+                <input type="email" name="email" id="id_email" required autocomplete="email"
+                       class="block w-full px-3 py-2 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="joao@exemplo.com" value="{{ form.email.value|default:'' }}">
+                {% if form.email.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.email.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Phone (WhatsApp) -->
+            <div>
+                <label for="id_phone" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">WhatsApp (com DDD)</label>
+                <input type="text" name="phone" id="id_phone" required
+                       class="block w-full px-3 py-2 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="Ex: 11999998888" value="{{ form.phone.value|default:'' }}">
+                {% if form.phone.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.phone.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Password 1 -->
+            <div>
+                <label for="id_password1" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Senha</label>
+                <input type="password" name="password1" id="id_password1" required autocomplete="new-password"
+                       class="block w-full px-3 py-2 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="••••••••">
+                {% if form.password1.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.password1.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Password 2 -->
+            <div>
+                <label for="id_password2" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Confirmar Senha</label>
+                <input type="password" name="password2" id="id_password2" required autocomplete="new-password"
+                       class="block w-full px-3 py-2 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="••••••••">
+                {% if form.password2.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.password2.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="w-full py-3 mt-4 bg-gradient-to-r from-amberGold to-accentGold hover:from-accentGold hover:to-white text-obsidian font-bold rounded-xl transition shadow-lg hover:shadow-accentGold/20 font-title">
+                Cadastrar
+            </button>
+        </form>
+
+        <!-- Login Link -->
+        <div class="text-center mt-6 relative z-10 text-xs text-gray-400">
+            Já possui uma conta? <a href="{% url 'login' %}" class="text-accentGold hover:underline font-bold transition">Faça login aqui</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "barbearia/base.html" %}
+
+{% block title %}{% if object %}Editar{% else %}Cadastrar{% endif %} Usuário - Barbearia Benx{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto my-6">
+    {% if user.profile.role == "BARBEIRO" %}
+    <a href="{% url 'barbeiro_dashboard' %}" class="inline-flex items-center space-x-1 text-sm text-accentGold hover:underline mb-6 transition">
+    {% else %}
+    <a href="{% url 'desenvolvedor_dashboard' %}" class="inline-flex items-center space-x-1 text-sm text-accentGold hover:underline mb-6 transition">    
+    {% endif %}
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Voltar ao painel</span>
+    </a>
+
+    <div class="glass-card rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-24 h-24 bg-accentGold/10 rounded-full blur-2xl"></div>
+
+        <div class="border-b border-white/5 pb-4 mb-6">
+            <span class="text-xs font-semibold text-accentGold">Controle de Acessos</span>
+            <h2 class="text-2xl font-bold text-white tracking-tight font-title mt-0.5">
+                {% if object %}Editar Conta: {{ object.username }}{% else %}Cadastrar Novo Usuário{% endif %}
+            </h2>
+            <p class="text-xs text-gray-400 mt-1">Crie ou edite credenciais, telefones e funções dos membros no sistema.</p>
+        </div>
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Username -->
+            <div>
+                <label for="id_username" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Usuário (login)</label>
+                <input type="text" name="username" id="id_username" required autocomplete="username"
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="Ex: josealdo" value="{{ form.username.value|default:'' }}">
+                {% if form.username.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.username.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- First Name & Last Name (Grid) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="id_first_name" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Nome</label>
+                    <input type="text" name="first_name" id="id_first_name" required
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="Ex: Jose" value="{{ form.first_name.value|default:'' }}">
+                    {% if form.first_name.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.first_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="id_last_name" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Sobrenome</label>
+                    <input type="text" name="last_name" id="id_last_name" required
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="Ex: Moura" value="{{ form.last_name.value|default:'' }}">
+                    {% if form.last_name.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.last_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Email & Phone (WhatsApp) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="id_email" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">E-mail</label>
+                    <input type="email" name="email" id="id_email" required autocomplete="email"
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="jose@exemplo.com" value="{{ form.email.value|default:'' }}">
+                    {% if form.email.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="id_phone" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">WhatsApp (DDD + Celular)</label>
+                    <input type="text" name="phone" id="id_phone"
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="Ex: 11999998888" value="{{ form.phone.value|default:'' }}">
+                    {% if form.phone.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.phone.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="id_password" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Senha</label>
+                <input type="password" name="password" id="id_password"
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="••••••••">
+                {% if form.password.help_text %}
+                    <span class="text-[10px] text-gray-500 mt-1 block">{{ form.password.help_text }}</span>
+                {% endif %}
+                {% if form.password.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.password.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            {% comment %} <!-- Role (Cargo) Select -->
+            <div>
+                <label for="id_role" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Função (Cargo)</label>
+                <select name="role" id="id_role" required onchange="toggleBarberField()"
+                        class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm">
+                    {% for role_choice in form.fields.role.choices %}
+                        <option value="{{ role_choice.0 }}" {% if form.role.value|stringformat:"s" == role_choice.0|stringformat:"s" %}selected{% endif %}>
+                            {{ role_choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.role.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.role.errors.0 }}</span>
+                {% endif %}
+            </div> {% endcomment %}
+
+            <!-- Assigned Barber Select (Conditional) -->
+            {% comment %} <div id="barber_assignment_container">
+                <label for="id_assigned_barber" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Barbeiro Atribuído (Carteira)</label>
+                <select name="assigned_barber" id="id_assigned_barber"
+                        class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm">
+                    {% for barber_choice in form.fields.assigned_barber.choices %}
+                        <option value="{{ barber_choice.0 }}" {% if form.assigned_barber.value|stringformat:"s" == barber_choice.0|stringformat:"s" %}selected{% endif %}>
+                            {{ barber_choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <span class="text-[10px] text-gray-500 mt-1 block">Associa este cliente à carteira de um barbeiro específico para faturamento.</span>
+                {% if form.assigned_barber.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.assigned_barber.errors.0 }}</span>
+                {% endif %}
+            </div> {% endcomment %}
+
+            <!-- Action buttons -->
+            <div class="flex items-center space-x-3 pt-2">
+                <button type="submit" class="flex-grow py-3 bg-gradient-to-r from-amberGold to-accentGold hover:from-accentGold hover:to-white text-obsidian font-bold rounded-xl transition shadow-lg hover:shadow-accentGold/20 font-title">
+                    Salvar Usuário
+                </button>
+                {% if user.profile.role == "BARBEIRO" %}
+                    <a href="{% url 'barbeiro_dashboard' %}" class="px-5 py-3 border border-white/10 hover:bg-white/5 text-gray-300 font-bold rounded-xl transition text-center text-sm">
+                        Cancelar
+                    </a>
+                {% else %}
+                    <a href="{% url 'desenvolvedor_dashboard' %}" class="px-5 py-3 border border-white/10 hover:bg-white/5 text-gray-300 font-bold rounded-xl transition text-center text-sm">
+                        Cancelar
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleBarberField() {
+        const roleSelect = document.getElementById('id_role');
+        const container = document.getElementById('barber_assignment_container');
+        if (roleSelect && container) {
+            // Show barber select only if role is 'CLIENTE'
+            if (roleSelect.value === 'CLIENTE') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+    }
+    // Run on load
+    document.addEventListener('DOMContentLoaded', toggleBarberField);
+</script>
+{% endblock %}

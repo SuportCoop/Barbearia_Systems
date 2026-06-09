@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Barbearia Benx{% endblock %}</title>
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="{% url 'manifest_json' %}">
+    <meta name="theme-color" content="#0B0F19">
+    <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=192&h=192&fit=crop">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        obsidian: {
+                            DEFAULT: '#0B0F19',
+                            card: '#161F30',
+                            light: '#1E293B'
+                        },
+                        amberGold: '#D97706',
+                        accentGold: '#F59E0B'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        title: ['Outfit', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0F19;
+            color: #F3F4F6;
+        }
+        h1, h2, h3, h4, h5, h6, .font-title {
+            font-family: 'Outfit', sans-serif;
+        }
+        .glass-card {
+            background: rgba(22, 31, 48, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glass-nav {
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0B0F19;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1E293B;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #D97706;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
+
+    <!-- Top Glass Navigation -->
+    <nav class="glass-nav sticky top-0 z-50 w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{% url 'dashboard_redirect' %}" class="flex items-center space-x-2">
+                        <svg class="h-8 w-8 text-accentGold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 3m0-3a2 2 0 110-3m-9 8h10M3 12a9 9 0 019 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-1.343 3-3V9m0 12c-1.657 0-3-1.343-3-3V9m3 0a3 3 0 10-6 0v9m6 0H6" />
+                        </svg>
+                        <span class="text-xl font-bold tracking-wider text-white font-title">
+                            BENX <span class="text-accentGold">BARBEARIA</span>
+                        </span>
+                    </a>
+                </div>
+
+                <!-- Navigation Links & User Info -->
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <div class="hidden md:flex items-center space-x-3 text-sm text-gray-300 mr-4">
+                            <span class="px-2 py-0.5 bg-obsidian-light rounded text-xs text-accentGold border border-accentGold/20">
+                                {% if user.profile.role == "BARBEIRO" %}
+                                    Barbeiro
+                                {% elif user.profile.role == "DESENVOLVEDOR" %}
+                                    Dev
+                                {% else %}
+                                    Cliente
+                                {% endif %}
+                            </span>
+                            <span class="font-medium text-white">{{ user.get_full_name|default:user.username }}</span>
+                        </div>
+
+                        <!-- Notification Bell (Desktop) -->
+                        {% if user.profile.role == "CLIENTE" or user.profile.role == "BARBEIRO" %}
+                            <div class="relative">
+                                <button onclick="toggleNotificationPanel()" class="p-1.5 rounded-full hover:bg-obsidian-light text-gray-300 hover:text-white transition focus:outline-none">
+                                    <span class="sr-only">Ver Notificações</span>
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                    </svg>
+                                    {% if unread_notifications_count > 0 %}
+                                        <span class="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-obsidian"></span>
+                                    {% endif %}
+                                </button>
+                            </div>
+                        {% endif %}
+
+                        <!-- Logout -->
+                        <form action="{% url 'logout' %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition">
+                                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                                <span class="hidden sm:inline">Sair</span>
+                            </button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-sm font-medium text-gray-300 hover:text-white transition">Login</a>
+                        <a href="{% url 'register' %}" class="px-3 py-1.5 rounded-md text-sm font-semibold bg-accentGold text-obsidian hover:bg-white transition">Registrar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Message Alerts (Django Messages) -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4 space-y-2">
+            {% for message in messages %}
+                <div class="flex items-center justify-between px-4 py-3 rounded-md border text-sm transition-all duration-300 
+                    {% if message.tags == 'success' %}
+                        bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                    {% elif message.tags == 'error' %}
+                        bg-red-500/10 border-red-500/20 text-red-400
+                    {% else %}
+                        bg-blue-500/10 border-blue-500/20 text-blue-400
+                    {% endif %}">
+                    <div class="flex items-center space-x-2">
+                        {% if message.tags == 'success' %}
+                            <svg class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        {% else %}
+                            <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
+                    <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-white transition">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-white/5 py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-gray-500 space-y-2">
+            <p>&copy; 2026 Barbearia Benx. Todos os direitos reservados.</p>
+            <p>Desenvolvido com Django, Tailwind CSS & PWA</p>
+            {% if user.is_authenticated and user.profile.role == "CLIENTE" or user.is_authenticated and user.profile.role == "BARBEIRO" %}
+                <button onclick="requestNotificationPermission()" class="text-accentGold hover:underline font-semibold focus:outline-none transition">
+                    🔔 Ativar Notificações do App
+                </button>
+            {% endif %}
+        </div>
+    </footer>
+
+    <!-- Client Notifications Modal (Drawer) -->
+    {% if user.is_authenticated and user.profile.role == "CLIENTE" or user.is_authenticated and user.profile.role == "BARBEIRO" %}
+        <div id="notificationPanel" class="hidden fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onclick="toggleNotificationPanel()"></div>
+                <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+                    <div class="pointer-events-auto w-screen max-w-md">
+                        <div class="flex h-full flex-col overflow-y-scroll bg-obsidian-card border-l border-white/5 py-6 shadow-xl">
+                            <div class="px-4 sm:px-6 flex items-center justify-between border-b border-white/5 pb-4">
+                                <h2 class="text-lg font-bold text-white font-title" id="slide-over-title">Notificações</h2>
+                                <button onclick="toggleNotificationPanel()" class="rounded-md text-gray-400 hover:text-white focus:outline-none">
+                                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <!-- Notifications List -->
+                            <div class="relative mt-6 flex-1 px-4 sm:px-6">
+                                {% if unread_notifications %}
+                                    <form action="{% url 'marcar_notificacoes_lidas' %}" method="post" class="mb-4 text-right">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-xs text-accentGold hover:underline font-semibold">
+                                            Marcar todas como lidas
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                <div class="space-y-4">
+                                    {% if unread_notifications or user.notifications.all %}
+                                        {% for notification in user.notifications.all|slice:":10" %}
+                                            <div class="p-4 rounded-lg border transition duration-300 
+                                                {% if not notification.is_read %}
+                                                    bg-accentGold/5 border-accentGold/20
+                                                {% else %}
+                                                    bg-obsidian-light/50 border-white/5 text-gray-400
+                                                {% endif %}">
+                                                <p class="text-sm {% if not notification.is_read %}text-white font-medium{% endif %}">
+                                                    {{ notification.message }}
+                                                </p>
+                                                <span class="block text-right text-[10px] text-gray-500 mt-2 font-medium">
+                                                    {{ notification.created_at|date:"d/m/Y H:i" }}
+                                                </span>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <div class="text-center py-8 text-sm text-gray-500">
+                                            Nenhuma notificação encontrada.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- PWA Service Worker Registration & Push Notification triggers -->
+    <script>
+        // Toggle notification panel drawer
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
+        }
+
+        // PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("{% url 'sw_js' %}")
+                    .then(reg => {
+                        console.log('PWA Service Worker registrado com sucesso! Escopo:', reg.scope);
+                    })
+                    .catch(err => {
+                        console.error('Falha ao registrar PWA Service Worker:', err);
+                    });
+            });
+        }
+
+        // Request browser push notifications
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification("Barbearia Benx", {
+                            body: "Notificações nativas ativadas com sucesso! Você receberá lembretes de corte aqui.",
+                            icon: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=192&h=192&fit=crop"
+                        });
+                    }
+                });
+            } else {
+                alert("Este navegador não suporta notificações.");
+            }
+        }
+
+        // Auto trigger native notifications for unread messages if allowed
+        document.addEventListener('DOMContentLoaded', () => {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                {% if user.is_authenticated and unread_notifications %}
+                    {% for notif in unread_notifications %}
+                        // Play synthesized chime sound (if allowed by browser interaction policy)
+                        const audio = new Audio("/static/audio/notification.wav");
+                        audio.play().catch(e => console.log("Audio play blocked by browser autoplay policy:", e));
+
+                        // Display native heads-up popup via Service Worker for PWA mobile compatibility
+                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                            navigator.serviceWorker.ready.then(registration => {
+                                registration.showNotification("Barbearia Benx", {
+                                    body: "{{ notif.message|escapejs }}",
+                                    icon: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=192&h=192&fit=crop",
+                                    vibrate: [200, 100, 200],
+                                    tag: "benx-notif-{{ notif.id }}",
+                                    sound: "/static/audio/notification.wav",
+                                    data: {
+                                        url: "/dashboard/"
+                                    }
+                                });
+                            });
+                        } else {
+                            // Fallback to standard window Notification if Service Worker is not ready/active
+                            new Notification("Barbearia Benx", {
+                                body: "{{ notif.message|escapejs }}",
+                                icon: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=192&h=192&fit=crop",
+                                vibrate: [200, 100, 200],
+                                tag: "benx-notif-{{ notif.id }}"
+                            });
+                        }
+                    {% endfor %}
+                {% endif %}
+            }
+        });
+    </script>
+</body>
+</html>

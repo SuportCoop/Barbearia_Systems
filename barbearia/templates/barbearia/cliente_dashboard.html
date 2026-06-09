@@ -1,0 +1,265 @@
+{% extends "barbearia/base.html" %}
+
+{% block title %}Painel do Cliente - Barbearia Benx{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    
+    <!-- Hero Header Card -->
+    <div class="glass-card rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between shadow-xl relative overflow-hidden">
+        <div class="absolute -top-20 -left-20 w-48 h-48 bg-accentGold/10 rounded-full blur-3xl"></div>
+        
+        <div class="space-y-3 text-center md:text-left z-10">
+            <span class="text-xs font-semibold uppercase tracking-wider text-accentGold px-2.5 py-1 bg-accentGold/10 rounded-full">Portal do Cliente</span>
+            <h1 class="text-3xl font-extrabold text-white tracking-tight">Olá, {{ user.first_name|default:user.username }}!</h1>
+            <p class="text-gray-400 max-w-md">Bem-vindo de volta à Barbearia Benx. Veja seu plano, agende um novo horário ou confira seus lembretes.</p>
+        </div>
+
+        <div class="mt-6 md:mt-0 z-10 flex space-x-3">
+            <a href="{% url 'agendar' %}" class="px-5 py-3 rounded-xl font-bold bg-gradient-to-r from-amberGold to-accentGold hover:from-accentGold hover:to-white text-obsidian shadow-lg hover:shadow-accentGold/20 transition flex items-center space-x-2">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Agendar Corte</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Info Grid: Plan & Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Plan card -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex flex-col justify-between relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-blue-500/5 rounded-full blur-xl"></div>
+            <div>
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Seu Plano de Assinatura</h3>
+                {% if profile.plan %}
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xl font-bold text-white">{{ profile.plan.name }}</span>
+                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded border 
+                                {% if profile.plan_active %}
+                                    bg-emerald-500/10 border-emerald-500/20 text-emerald-400
+                                {% else %}
+                                    bg-amber-500/10 border-amber-500/20 text-amber-400
+                                {% endif %}">
+                                {% if profile.plan_active %}Ativo{% else %}Pendente{% endif %}
+                            </span>
+                        </div>
+                        <p class="text-2xl font-extrabold text-accentGold">R$ {{ profile.plan.price }}<span class="text-xs text-gray-500 font-normal">/mês</span></p>
+                        
+                        <div class="pt-3 border-t border-white/5 space-y-1.5 text-xs text-gray-400">
+                            <div class="flex justify-between">
+                                <span>Vencimento da Mensalidade:</span>
+                                <span class="text-white font-medium">
+                                    {% if profile.plan_due_date %}
+                                        {{ profile.plan_due_date|date:"d/m/Y" }}
+                                    {% else %}
+                                        --/--/----
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% if profile.assigned_barber %}
+                                <div class="flex justify-between">
+                                    <span>Barbeiro da Carteira:</span>
+                                    <span class="text-white font-medium">{{ profile.assigned_barber.get_full_name|default:profile.assigned_barber.username }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="py-4 text-center">
+                        <p class="text-gray-400 text-sm mb-3">Você não possui um plano ativo.</p>
+                        <p class="text-xs text-gray-500">Converse com seu barbeiro para assinar um plano mensal e ganhar cortes ilimitados e descontos!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Next Booking Card -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex flex-col justify-between relative overflow-hidden col-span-1 md:col-span-2">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-accentGold/5 rounded-full blur-xl"></div>
+            <div>
+                <h3 class="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Próximo Corte Agendado</h3>
+                {% if upcoming_bookings %}
+                    {% with next_booking=upcoming_bookings.0 %}
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-start space-x-4">
+                                <div class="p-3 bg-accentGold/10 rounded-xl text-accentGold text-center min-w-[70px]">
+                                    <span class="block text-2xl font-bold tracking-tight leading-none">{{ next_booking.date|date:"d" }}</span>
+                                    <span class="block text-[10px] uppercase font-bold tracking-wide mt-1">{{ next_booking.date|date:"M" }}</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <h4 class="text-lg font-bold text-white">{{ next_booking.service.name }}</h4>
+                                    <p class="text-sm text-gray-400 flex items-center">
+                                        <svg class="h-4 w-4 mr-1 text-accentGold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {{ next_booking.time|date:"H:i" }} — Barbeiro: {{ next_booking.barber.get_full_name|default:next_booking.barber.username }}
+                                    </p>
+                                    {% if next_booking.notes %}
+                                        <p class="text-xs text-gray-500 italic">"{{ next_booking.notes }}"</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <form action="{% url 'cancelar_agendamento' next_booking.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="px-4 py-2 border border-red-500/20 hover:bg-red-500/10 text-red-400 text-sm font-medium rounded-xl transition">
+                                    Desmarcar Corte
+                                </button>
+                            </form>
+                        </div>
+                    {% endwith %}
+                {% else %}
+                    <div class="py-6 text-center">
+                        <p class="text-gray-400 text-sm">Sem agendamentos futuros no momento.</p>
+                        <a href="{% url 'agendar' %}" class="inline-block mt-3 text-xs font-bold text-accentGold hover:underline">
+                            Clique aqui para agendar seu corte agora &rarr;
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Lists & History -->
+    <div class="glass-card rounded-2xl p-6 shadow-lg">
+        <h3 class="text-lg font-bold text-white font-title border-b border-white/5 pb-4 mb-4">Meus Agendamentos</h3>
+        
+        <!-- Tab Content -->
+        <div class="space-y-4">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Todos os Agendamentos Futuros</h4>
+            {% if upcoming_bookings %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5 text-xs text-gray-400 font-medium">
+                                <th class="pb-3">Data</th>
+                                <th class="pb-3">Horário</th>
+                                <th class="pb-3">Barbeiro</th>
+                                <th class="pb-3">Serviço</th>
+                                <th class="pb-3">Valor</th>
+                                <th class="pb-3 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 text-sm text-gray-300">
+                            {% for booking in upcoming_bookings %}
+                                <tr>
+                                    <td class="py-3.5 font-medium text-white">{{ booking.date|date:"d/m/Y" }}</td>
+                                    <td class="py-3.5">{{ booking.time|date:"H:i" }}</td>
+                                    <td class="py-3.5">{{ booking.barber.get_full_name|default:booking.barber.username }}</td>
+                                    <td class="py-3.5">{{ booking.service.name }}</td>
+                                    <td class="py-3.5 text-accentGold font-bold">R$ {{ booking.service.price }}</td>
+                                    <td class="py-3.5 text-right">
+                                        <form action="{% url 'cancelar_agendamento' booking.id %}" method="post" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-xs text-red-400 hover:text-red-300 hover:underline">
+                                                Desmarcar
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-xs text-gray-500 italic py-2">Nenhum agendamento futuro.</p>
+            {% endif %}
+
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400 pt-4 border-t border-white/5">Histórico Recente (Últimos 5 cortes)</h4>
+            {% if past_bookings %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-white/5 text-xs text-gray-400 font-medium">
+                                <th class="pb-3">Data</th>
+                                <th class="pb-3">Horário</th>
+                                <th class="pb-3">Barbeiro</th>
+                                <th class="pb-3">Serviço</th>
+                                <th class="pb-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5 text-xs text-gray-400">
+                            {% for booking in past_bookings %}
+                                <tr>
+                                    <td class="py-3 font-medium text-white">{{ booking.date|date:"d/m/Y" }}</td>
+                                    <td class="py-3">{{ booking.time|date:"H:i" }}</td>
+                                    <td class="py-3">{{ booking.barber.get_full_name|default:booking.barber.username }}</td>
+                                    <td class="py-3 text-gray-300">{{ booking.service.name }}</td>
+                                    <td class="py-3 font-semibold">
+                                        {% if booking.status == "CONCLUIDO" %}
+                                            <span class="text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Atendido</span>
+                                        {% elif booking.status == "CANCELADO" %}
+                                            <span class="text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded">Cancelado</span>
+                                        {% else %}
+                                            <span class="text-gray-400 bg-gray-500/10 px-1.5 py-0.5 rounded">Agendado</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-xs text-gray-500 italic py-2">Nenhum atendimento registrado no histórico.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Product Showcase -->
+    {% comment %} <div class="glass-card rounded-2xl p-6 shadow-lg">
+        <div class="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
+            <h3 class="text-lg font-bold text-white font-title">Produtos de Venda</h3>
+            <span class="text-xs text-gray-400">Compre na Barbearia</span>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            {% for product in products %}
+                <div class="bg-obsidian/30 border border-white/5 rounded-xl overflow-hidden flex flex-col justify-between hover:border-accentGold/20 transition-all duration-300 group">
+                    <div class="relative aspect-video w-full overflow-hidden bg-obsidian-light/50">
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}" class="object-cover w-full h-full group-hover:scale-105 transition duration-500">
+                        {% else %}
+                            <!-- Placeholder svg -->
+                            <div class="flex items-center justify-center w-full h-full text-gray-600">
+                                <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="p-4 space-y-2 flex-grow flex flex-col justify-between">
+                        <div>
+                            <h4 class="font-bold text-white text-sm tracking-tight leading-snug">{{ product.name }}</h4>
+                            <p class="text-xs text-gray-500 line-clamp-2 mt-1">{{ product.description }}</p>
+                        </div>
+                        <div class="pt-3 border-t border-white/5 flex items-center justify-between">
+                            <div>
+                                <span class="block text-[10px] text-gray-500 uppercase font-semibold">Preço</span>
+                                <span class="text-sm font-extrabold text-accentGold">R$ {{ product.price }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] text-gray-500 text-right">Estoque</span>
+                                <span class="text-[11px] text-white font-medium block text-right">{{ product.stock }} un.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 pt-0">
+                        <!-- WhatsApp Direct Reservation Link -->
+                        <a href="https://wa.me/{% if profile.assigned_barber.profile.phone %}{{ profile.assigned_barber.profile.phone }}{% else %}5511999999999{% endif %}?text=Ol%C3%A1%2C%20gostaria%20de%20reservar%20o%20produto%20*{{ product.name|urlencode }}*%20(R%24%20{{ product.price }})%20para%20retirar%20no%20meu%20pr%C3%B3ximo%20corte%20na%20Barbearia%20Benx." 
+                           target="_blank" 
+                           class="block w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-lg transition text-xs text-center border border-emerald-500/20">
+                            Reservar via WhatsApp
+                        </a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-full py-8 text-center text-sm text-gray-500">
+                    Nenhum produto cadastrado para venda no momento.
+                </div>
+            {% endfor %}
+        </div>
+    </div> {% endcomment %}
+</div>
+{% endblock %}

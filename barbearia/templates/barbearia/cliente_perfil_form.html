@@ -1,0 +1,151 @@
+{% extends "barbearia/base.html" %}
+
+{% block title %}Editar Perfil do Cliente - Barbearia Benx{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto my-6">
+    
+    <a href="{% url 'barbeiro_dashboard' %}" class="inline-flex items-center space-x-1 text-sm text-accentGold hover:underline mb-6 transition">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Voltar ao painel</span>
+    </a>
+
+    <div class="glass-card rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-24 h-24 bg-accentGold/10 rounded-full blur-2xl"></div>
+
+        <div class="border-b border-white/5 pb-4 mb-6">
+            <span class="text-xs font-semibold text-accentGold">Gerenciamento de Clientes</span>
+            <h2 class="text-2xl font-bold text-white tracking-tight font-title mt-0.5">Editar Perfil do Cliente</h2>
+            <p class="text-xs text-gray-400 mt-1">
+                Cliente: <strong class="text-white">{{ object.user.get_full_name|default:object.user.username }}</strong>
+            </p>
+        </div>
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- First Name & Last Name (Grid) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="id_first_name" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Nome</label>
+                    <input type="text" name="first_name" id="id_first_name" required
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="Ex: João" value="{{ form.first_name.value|default:'' }}">
+                    {% if form.first_name.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.first_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="id_last_name" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Sobrenome</label>
+                    <input type="text" name="last_name" id="id_last_name" required
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="Ex: Silva" value="{{ form.last_name.value|default:'' }}">
+                    {% if form.last_name.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.last_name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Email & Phone (WhatsApp) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="id_email" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">E-mail</label>
+                    <input type="email" name="email" id="id_email" required autocomplete="email"
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="joao@exemplo.com" value="{{ form.email.value|default:'' }}">
+                    {% if form.email.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="id_phone" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">WhatsApp (DDD + Celular)</label>
+                    <input type="text" name="phone" id="id_phone" required
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="Ex: 11999998888" value="{{ form.phone.value|default:'' }}">
+                    {% if form.phone.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.phone.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Plan Select -->
+            <div>
+                <label for="id_plan" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Plano</label>
+                <select name="plan" id="id_plan"
+                        class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm">
+                    {% for plan_choice in form.fields.plan.choices %}
+                        <option value="{{ plan_choice.0 }}" {% if form.plan.value|stringformat:"s" == plan_choice.0|stringformat:"s" %}selected{% endif %}>
+                            {{ plan_choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.plan.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.plan.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Assigned Barber Select -->
+            <div>
+                <label for="id_assigned_barber" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Barbeiro Responsável (Carteira)</label>
+                <select name="assigned_barber" id="id_assigned_barber"
+                        class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm">
+                    {% for barber_choice in form.fields.assigned_barber.choices %}
+                        <option value="{{ barber_choice.0 }}" {% if form.assigned_barber.value|stringformat:"s" == barber_choice.0|stringformat:"s" %}selected{% endif %}>
+                            {{ barber_choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.assigned_barber.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.assigned_barber.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Expiration / Due Date -->
+            <div>
+                <label for="id_plan_due_date" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Vencimento da Próxima Mensalidade</label>
+                <input type="date" name="plan_due_date" id="id_plan_due_date"
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       value="{{ form.plan_due_date.value|default:'' }}">
+                {% if form.plan_due_date.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.plan_due_date.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Plan Active Toggle (Checkbox) -->
+            <div class="flex items-center space-x-3 bg-obsidian-light/20 p-4 rounded-xl border border-white/5">
+                <div class="flex items-center h-5">
+                    <input id="id_plan_active" name="plan_active" type="checkbox" {% if form.plan_active.value %}checked{% endif %}
+                           class="focus:ring-accentGold h-5 w-5 text-accentGold bg-obsidian-light/50 border-white/10 rounded transition cursor-pointer">
+                </div>
+                <div class="text-sm">
+                    <label for="id_plan_active" class="font-bold text-white cursor-pointer select-none">Assinatura Ativa (Mensalidade Paga)</label>
+                    <p class="text-xs text-gray-400 select-none">Desmarque se o cliente estiver inadimplente ou quiser suspender os cortes ilimitados.</p>
+                </div>
+                {% if form.plan_active.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.plan_active.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center space-x-3 pt-2">
+                <button type="submit" class="flex-grow py-3 bg-gradient-to-r from-amberGold to-accentGold hover:from-accentGold hover:to-white text-obsidian font-bold rounded-xl transition shadow-lg hover:shadow-accentGold/20 font-title">
+                    Salvar Perfil
+                </button>
+                <a href="{% url 'barbeiro_dashboard' %}" class="px-5 py-3 border border-white/10 hover:bg-white/5 text-gray-300 font-bold rounded-xl transition text-center text-sm">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

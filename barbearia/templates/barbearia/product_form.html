@@ -1,0 +1,103 @@
+{% extends "barbearia/base.html" %}
+
+{% block title %}{% if object %}Editar{% else %}Criar{% endif %} Produto - Barbearia Benx{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto my-6">
+    
+    <a href="{% url 'dashboard_redirect' %}" class="inline-flex items-center space-x-1 text-sm text-accentGold hover:underline mb-6 transition">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Voltar ao painel</span>
+    </a>
+
+    <div class="glass-card rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-24 h-24 bg-accentGold/10 rounded-full blur-2xl"></div>
+
+        <div class="border-b border-white/5 pb-4 mb-6">
+            <h2 class="text-2xl font-bold text-white tracking-tight font-title">
+                {% if object %}Editar Produto: {{ object.name }}{% else %}Cadastrar Novo Produto{% endif %}
+            </h2>
+            <p class="text-xs text-gray-400 mt-1">Insira os detalhes do produto de venda, estoque e preço.</p>
+        </div>
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Name -->
+            <div>
+                <label for="id_name" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Nome do Produto</label>
+                <input type="text" name="name" id="id_name" required
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="Ex: Pomada Modeladora" value="{{ form.name.value|default:'' }}">
+                {% if form.name.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.name.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Price & Stock -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="id_price" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Preço (R$)</label>
+                    <input type="number" name="price" id="id_price" step="0.01" required
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="0.00" value="{{ form.price.value|default:'' }}">
+                    {% if form.price.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.price.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="id_stock" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Estoque</label>
+                    <input type="number" name="stock" id="id_stock" required
+                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                           placeholder="0" value="{{ form.stock.value|default:'' }}">
+                    {% if form.stock.errors %}
+                        <span class="text-xs text-red-400 mt-1 block">{{ form.stock.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="id_description" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Descrição</label>
+                <textarea name="description" id="id_description" rows="3"
+                          class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                          placeholder="Uma breve apresentação sobre o produto...">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.description.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Image URL -->
+            <div>
+                <label for="id_image_url" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">URL da Imagem</label>
+                <input type="url" name="image_url" id="id_image_url"
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="https://..." value="{{ form.image_url.value|default:'' }}">
+                {% if form.image_url.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.image_url.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center space-x-3 pt-2">
+                <button type="submit" class="flex-grow py-3 bg-gradient-to-r from-amberGold to-accentGold hover:from-accentGold hover:to-white text-obsidian font-bold rounded-xl transition shadow-lg hover:shadow-accentGold/20 font-title">
+                    Salvar Produto
+                </button>
+                <a href="{% url 'dashboard_redirect' %}" class="px-5 py-3 border border-white/10 hover:bg-white/5 text-gray-300 font-bold rounded-xl transition text-center text-sm">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
