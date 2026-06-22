@@ -1,6 +1,6 @@
 {% extends "barbearia/base.html" %}
 
-{% block title %}Painel do Cliente - Barbearia Benx{% endblock %}
+{% block title %}Painel do Cliente - BarberHub{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
@@ -12,7 +12,7 @@
         <div class="space-y-3 text-center md:text-left z-10">
             <span class="text-xs font-semibold uppercase tracking-wider text-accentGold px-2.5 py-1 bg-accentGold/10 rounded-full">Portal do Cliente</span>
             <h1 class="text-3xl font-extrabold text-white tracking-tight">Olá, {{ user.first_name|default:user.username }}!</h1>
-            <p class="text-gray-400 max-w-md">Bem-vindo de volta à Barbearia Benx. Veja seu plano, agende um novo horário ou confira seus lembretes.</p>
+            <p class="text-gray-400 max-w-md">Bem-vindo de volta à BarberHub. Veja seu plano, agende um novo horário ou confira seus lembretes.</p>
         </div>
 
         <div class="mt-6 md:mt-0 z-10 flex space-x-3">
@@ -208,7 +208,8 @@
     </div>
 
     <!-- Product Showcase -->
-    {% comment %} <div class="glass-card rounded-2xl p-6 shadow-lg">
+    <!-- Product Showcase -->
+    <div class="glass-card rounded-2xl p-6 shadow-lg">
         <div class="flex justify-between items-center border-b border-white/5 pb-4 mb-6">
             <h3 class="text-lg font-bold text-white font-title">Produtos de Venda</h3>
             <span class="text-xs text-gray-400">Compre na Barbearia</span>
@@ -245,12 +246,27 @@
                             </div>
                         </div>
                     </div>
-                    <div class="p-4 pt-0">
+                    <div class="p-4 pt-0 space-y-2">
+                        {% if product.stock > 0 %}
+                            <!-- In-App Reservation -->
+                            <form action="{% url 'reservar_produto' product.id %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" 
+                                        class="w-full py-2 bg-accentGold hover:bg-white text-obsidian font-bold rounded-lg transition text-xs text-center shadow-md">
+                                    Reservar no App (Retirar)
+                                </button>
+                            </form>
+                        {% else %}
+                            <button disabled 
+                                    class="w-full py-2 bg-white/5 text-gray-600 font-bold rounded-lg transition text-xs text-center border border-white/5 cursor-not-allowed">
+                                Esgotado
+                            </button>
+                        {% endif %}
                         <!-- WhatsApp Direct Reservation Link -->
-                        <a href="https://wa.me/{% if profile.assigned_barber.profile.phone %}{{ profile.assigned_barber.profile.phone }}{% else %}5511999999999{% endif %}?text=Ol%C3%A1%2C%20gostaria%20de%20reservar%20o%20produto%20*{{ product.name|urlencode }}*%20(R%24%20{{ product.price }})%20para%20retirar%20no%20meu%20pr%C3%B3ximo%20corte%20na%20Barbearia%20Benx." 
+                        <a href="https://wa.me/{% if profile.assigned_barber.profile.phone %}{{ profile.assigned_barber.profile.phone }}{% else %}5511999999999{% endif %}?text=Olá%2C%20gostaria%20de%20reservar%20o%20produto%20*{{ product.name|urlencode }}*%20(R%24%20{{ product.price }})%20para%20retirar%20no%20meu%20próximo%20corte%20na%20Barbearia%20BarberHub." 
                            target="_blank" 
-                           class="block w-full py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-bold rounded-lg transition text-xs text-center border border-emerald-500/20">
-                            Reservar via WhatsApp
+                           class="block w-full py-2 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 font-bold rounded-lg transition text-xs text-center border border-emerald-500/10">
+                            Falar no WhatsApp
                         </a>
                     </div>
                 </div>
@@ -260,6 +276,61 @@
                 </div>
             {% endfor %}
         </div>
-    </div> {% endcomment %}
+    </div>
+
+    <!-- Product Reservations List -->
+    <div class="glass-card rounded-2xl p-6 shadow-lg">
+        <h3 class="text-lg font-bold text-white font-title border-b border-white/5 pb-4 mb-4">Minhas Reservas de Produtos</h3>
+        
+        <div class="overflow-x-auto">
+            {% if product_reservations %}
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-white/5 text-xs text-gray-400 font-medium">
+                            <th class="pb-3">Data da Reserva</th>
+                            <th class="pb-3">Produto</th>
+                            <th class="pb-3">Valor</th>
+                            <th class="pb-3">Quantidade</th>
+                            <th class="pb-3">Status</th>
+                            <th class="pb-3 text-right">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5 text-sm text-gray-300">
+                        {% for res in product_reservations %}
+                            <tr>
+                                <td class="py-3.5 font-medium text-white">{{ res.created_at|date:"d/m/Y H:i" }}</td>
+                                <td class="py-3.5">{{ res.product.name }}</td>
+                                <td class="py-3.5 text-accentGold font-bold">R$ {{ res.product.price }}</td>
+                                <td class="py-3.5">{{ res.quantity }} un.</td>
+                                <td class="py-3.5">
+                                    {% if res.status == "CONCLUIDO" %}
+                                        <span class="text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded text-xs font-bold">Retirado / Pago</span>
+                                    {% elif res.status == "CANCELADO" %}
+                                        <span class="text-red-400 bg-red-500/10 px-2 py-0.5 rounded text-xs font-bold">Cancelado</span>
+                                    {% else %}
+                                        <span class="text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded text-xs font-bold">Aguardando Retirada</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3.5 text-right">
+                                    {% if res.status == "PENDENTE" %}
+                                        <form action="{% url 'cliente_cancelar_reserva' res.id %}" method="post" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-xs text-red-400 hover:text-red-300 hover:underline">
+                                                Cancelar Reserva
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-xs text-gray-600">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-xs text-gray-500 italic py-2">Você não possui nenhuma reserva de produto ativa no momento.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

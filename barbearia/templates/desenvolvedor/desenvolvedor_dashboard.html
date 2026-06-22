@@ -1,6 +1,6 @@
 {% extends "barbearia/base.html" %}
 
-{% block title %}Painel do Desenvolvedor - Barbearia Benx{% endblock %}
+{% block title %}Painel do Desenvolvedor - BarberHub{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
@@ -18,7 +18,7 @@
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
-                <span>Novo Usuário</span>
+                <span>Novo Barbeiro / Admin</span>
             </a>
             <form action="{% url 'seed_database' %}" method="post">
                 {% csrf_token %}
@@ -197,6 +197,92 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Barbearias List -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center border-b border-white/5 pb-2">
+                    <h3 class="text-lg font-bold text-white font-title">Todas as Barbearias</h3>
+                </div>
+                <div class="overflow-x-auto max-h-[300px] custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs text-gray-300">
+                        <thead>
+                            <tr class="border-b border-white/5 text-gray-500 font-medium">
+                                <th class="pb-2">Nome</th>
+                                <th class="pb-2">Endereço</th>
+                                <th class="pb-2">Telefone</th>
+                                <th class="pb-2 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for bs in barbershops %}
+                                <tr class="hover:bg-white/2 transition">
+                                    <td class="py-2.5 font-bold text-white flex items-center space-x-2">
+                                        {% if bs.logo_url %}
+                                            <img src="{{ bs.logo_url }}" class="h-6 w-6 rounded-full object-cover">
+                                        {% endif %}
+                                        <span>{{ bs.name }}</span>
+                                    </td>
+                                    <td class="py-2.5">{{ bs.address|default:"-" }}</td>
+                                    <td class="py-2.5">{{ bs.phone|default:"-" }}</td>
+                                    <td class="py-2.5 text-right space-x-2">
+                                        <a href="{% url 'editar_barbearia' bs.id %}" class="text-accentGold hover:underline font-bold">Editar</a>
+                                        <a href="{% url 'deletar_barbearia' bs.id %}" class="text-red-400 hover:underline" onclick="return confirm('Deseja realmente excluir esta barbearia?')">Remover</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="py-4 text-center text-gray-500 italic">Nenhuma barbearia cadastrada.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Product Reservations List -->
+            <div class="space-y-3">
+                <h3 class="text-lg font-bold text-white font-title border-b border-white/5 pb-2">Reservas de Produtos Pendentes</h3>
+                <div class="overflow-x-auto max-h-[300px] custom-scrollbar">
+                    <table class="w-full text-left border-collapse text-xs text-gray-300">
+                        <thead>
+                            <tr class="border-b border-white/5 text-gray-500 font-medium">
+                                <th class="pb-2">Data</th>
+                                <th class="pb-2">Cliente</th>
+                                <th class="pb-2">Produto</th>
+                                <th class="pb-2">Barbearia</th>
+                                <th class="pb-2">Quantidade</th>
+                                <th class="pb-2 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            {% for res in pending_reservations %}
+                                <tr class="hover:bg-white/2 transition">
+                                    <td class="py-2.5">{{ res.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td class="py-2.5 text-white font-medium">{{ res.client.get_full_name|default:res.client.username }}</td>
+                                    <td class="py-2.5">{{ res.product.name }}</td>
+                                    <td class="py-2.5 text-accentGold">{{ res.product.barbershop.name|default:"Global" }}</td>
+                                    <td class="py-2.5">{{ res.quantity }} un.</td>
+                                    <td class="py-2.5 text-right space-x-2">
+                                        <form action="{% url 'concluir_reserva' res.id %}" method="post" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-emerald-400 hover:underline font-bold">Entregar</button>
+                                        </form>
+                                        <form action="{% url 'desenvolvedor_cancelar_reserva' res.id %}" method="post" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="text-red-400 hover:underline" onclick="return confirm('Deseja realmente cancelar esta reserva?')">Cancelar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="py-4 text-center text-gray-500 italic">Nenhuma reserva de produto pendente no momento.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
         <!-- Right 1 Col: Management Sidebar (Products / Services creation) -->
@@ -321,6 +407,38 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <!-- Barbearias CRUD Panel -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg space-y-4">
+                <h3 class="text-base font-bold text-white font-title border-b border-white/5 pb-2">Cadastrar Barbearia</h3>
+                
+                <form action="{% url 'criar_barbearia' %}" method="post" class="space-y-3 text-xs">
+                    {% csrf_token %}
+                    <div>
+                        <label for="id_bs_name" class="block text-gray-400 mb-1">Nome da Barbearia</label>
+                        <input type="text" name="name" id="id_bs_name" required
+                               class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                    </div>
+                    <div>
+                        <label for="id_bs_phone" class="block text-gray-400 mb-1">Telefone / WhatsApp</label>
+                        <input type="text" name="phone" id="id_bs_phone"
+                               class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                    </div>
+                    <div>
+                        <label for="id_bs_addr" class="block text-gray-400 mb-1">Endereço</label>
+                        <input type="text" name="address" id="id_bs_addr"
+                               class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                    </div>
+                    <div>
+                        <label for="id_bs_logo" class="block text-gray-400 mb-1">URL do Logotipo</label>
+                        <input type="url" name="logo_url" id="id_bs_logo" placeholder="https://..."
+                               class="w-full bg-obsidian-light/50 border border-white/10 rounded-lg p-2 text-white focus:outline-none focus:ring-1 focus:ring-accentGold">
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-accentGold text-obsidian font-bold rounded-lg hover:bg-white transition text-xs">
+                        Adicionar Barbearia
+                    </button>
+                </form>
             </div>
 
         </div>

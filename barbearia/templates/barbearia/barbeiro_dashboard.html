@@ -1,6 +1,6 @@
 {% extends "barbearia/base.html" %}
 
-{% block title %}Painel do Barbeiro - Barbearia Benx{% endblock %}
+{% block title %}Painel do Barbeiro - BarberHub{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
@@ -13,28 +13,37 @@
             <h1 class="text-3xl font-extrabold text-white tracking-tight">Olá, {{ user.first_name|default:user.username }}!</h1>
             <p class="text-gray-400 max-w-md">Gerencie sua agenda do dia, atenda seus clientes da carteira e controle seu faturamento.</p>
         </div>
-        <div class="mt-6 md:mt-0 z-10 flex space-x-3">
+        <div class="mt-6 md:mt-0 z-10 flex flex-wrap gap-3 justify-center md:justify-end">
+            <a href="{% url 'barbeiro_agendar' %}" class="px-4 py-2.5 rounded-xl font-bold bg-gradient-to-r from-amberGold to-accentGold hover:from-accentGold hover:to-white text-obsidian shadow-lg hover:shadow-accentGold/20 transition flex items-center space-x-1.5 text-sm">
+                <!-- Calendar Icon -->
+                <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Novo Agendamento</span>
+            </a>
             <a href="{% url 'criar_plano' %}" class="px-4 py-2.5 rounded-xl font-bold bg-gradient-to-r from-amberGold to-accentGold hover:from-accentGold hover:to-white text-obsidian shadow-lg hover:shadow-accentGold/20 transition flex items-center space-x-1.5 text-sm">
                 <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0h-3" />
                 </svg>
                 <span>Criar Novo Plano</span>
             </a>
-        </div>
-        
-        {% comment %} NEW USER  {% endcomment %}
-        <div class="mt-6 md:mt-0 z-10 flex flex-col sm:flex-row gap-3">
-            <a href="{% url 'barbeiro_criar_usuario' %}" class="px-5 py-3 rounded-xl font-bold bg-accentGold hover:bg-white text-obsidian shadow-lg hover:shadow-accentGold/20 transition flex items-center space-x-2 text-sm justify-center">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <a href="{% url 'barbeiro_criar_usuario' %}" class="px-4 py-2.5 rounded-xl font-bold bg-accentGold hover:bg-white text-obsidian shadow-lg hover:shadow-accentGold/20 transition flex items-center space-x-1.5 text-sm justify-center">
+                <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
-                <span>Novo Usuário</span>
+                <span>Novo Cliente</span>
+            </a>
+            <a href="{% url 'configurar_agenda' %}" class="px-4 py-2.5 rounded-xl font-bold bg-gray-800 hover:bg-white text-white hover:text-obsidian shadow-lg transition flex items-center space-x-1.5 text-sm justify-center border border-gray-700">
+                <svg class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <span>Configurar Horários</span>
             </a>
         </div>
     </div>
 
     <!-- Metrics Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
         
         <!-- Metric 1: Portfolio size -->
         <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4">
@@ -49,18 +58,16 @@
             </div>
         </div>
 
-        <!-- Metric 2: Monthly billing -->
-        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-24 h-24 bg-accentGold/5 rounded-full blur-xl"></div>
-            <div class="p-3.5 bg-accentGold/10 rounded-xl text-accentGold">
+        <!-- Metric 1b: Mensalistas -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4">
+            <div class="p-3.5 bg-purple-500/10 rounded-xl text-purple-400">
                 <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>
             </div>
             <div>
-                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Faturamento no Mês</span>
-                <span class="text-xl font-black text-accentGold font-title">R$ {{ monthly_revenue }}</span>
-                <span class="block text-[9px] text-gray-500 leading-none mt-1">Cortes: R${{ service_billing }} | Planos: R${{ plan_billing }}</span>
+                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Clientes Mensalistas</span>
+                <span class="text-2xl font-black text-white font-title">{{ mensalistas_count }}</span>
             </div>
         </div>
 
@@ -76,6 +83,36 @@
                 <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Faturamento do Dia</span>
                 <span class="text-xl font-black text-emerald-400 font-title">R$ {{ today_completed_billing }}</span>
                 <span class="block text-[9px] text-gray-500 leading-none mt-1">Serviços concluídos hoje</span>
+            </div>
+        </div>
+
+        <!-- Metric 2c: Weekly billing -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-amberGold/5 rounded-full blur-xl"></div>
+            <div class="p-3.5 bg-amberGold/10 rounded-xl text-amberGold">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V7" />
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Faturamento na Semana</span>
+                <span class="text-xl font-black text-amberGold font-title">R$ {{ weekly_revenue }}</span>
+                <span class="block text-[9px] text-gray-500 leading-none mt-1">Desde segunda-feira</span>
+            </div>
+        </div>
+
+        <!-- Metric 2: Monthly billing -->
+        <div class="glass-card rounded-2xl p-6 shadow-lg flex items-center space-x-4 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 bg-accentGold/5 rounded-full blur-xl"></div>
+            <div class="p-3.5 bg-accentGold/10 rounded-xl text-accentGold">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V7" />
+                </svg>
+            </div>
+            <div>
+                <span class="block text-xs font-semibold uppercase tracking-wider text-gray-500">Faturamento no Mês</span>
+                <span class="text-xl font-black text-accentGold font-title">R$ {{ monthly_revenue }}</span>
+                <span class="block text-[9px] text-gray-500 leading-none mt-1">Cortes: R${{ service_billing }} | Planos: R${{ plan_billing }}</span>
             </div>
         </div>
 
@@ -214,6 +251,58 @@
         </div>
     </div>
 
+    <!-- Product Reservations -->
+    <div class="glass-card rounded-2xl p-6 shadow-lg space-y-4">
+        <div class="flex justify-between items-center border-b border-white/5 pb-3">
+            <h3 class="text-lg font-bold text-white font-title">Reservas de Produtos Pendentes</h3>
+            <span class="text-xs text-gray-400">Aguardando retirada de clientes da barbearia</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            {% if pending_reservations %}
+                <table class="w-full text-left border-collapse text-sm text-gray-300">
+                    <thead>
+                        <tr class="border-b border-white/5 text-xs text-gray-400 font-medium">
+                            <th class="pb-3">Data</th>
+                            <th class="pb-3">Cliente</th>
+                            <th class="pb-3">Produto</th>
+                            <th class="pb-3">Quantidade</th>
+                            <th class="pb-3">Valor Unitário</th>
+                            <th class="pb-3 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        {% for res in pending_reservations %}
+                            <tr class="hover:bg-white/2 transition">
+                                <td class="py-3">{{ res.created_at|date:"d/m/Y H:i" }}</td>
+                                <td class="py-3 text-white font-medium">{{ res.client.get_full_name|default:res.client.username }}</td>
+                                <td class="py-3">{{ res.product.name }}</td>
+                                <td class="py-3">{{ res.quantity }} un.</td>
+                                <td class="py-3 text-accentGold font-bold">R$ {{ res.product.price }}</td>
+                                <td class="py-3 text-right space-x-3">
+                                    <form action="{% url 'concluir_reserva' res.id %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-emerald-400 hover:underline font-bold text-xs">
+                                            ✓ Confirmar Entrega / Pago
+                                        </button>
+                                    </form>
+                                    <form action="{% url 'barbeiro_cancelar_reserva' res.id %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-red-400 hover:underline text-xs" onclick="return confirm('Deseja realmente cancelar esta reserva?')">
+                                            Cancelar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p class="text-xs text-gray-500 italic py-2 text-center">Nenhuma reserva de produto pendente para retirada.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Bottom: Carteira de Clientes -->
     <div class="glass-card rounded-2xl p-6 shadow-lg space-y-4">
         <div class="flex justify-between items-center border-b border-white/5 pb-3">
@@ -281,7 +370,7 @@
                                     <div class="flex justify-end items-center space-x-3">
                                         <!-- WhatsApp Reminder Icon Button -->
                                         {% if profile.phone %}
-                                            <a href="https://wa.me/{{ profile.phone }}?text={% if profile.plan %}{% if profile.plan_active %}Olá%20*{{ profile.user.first_name|urlencode }}*%2C%20passando%20para%20lembrar%20que%20a%20mensalidade%20do%20seu%20plano%20*{{ profile.plan.name|urlencode }}*%20(R%24%20{{ profile.plan.price }})%20vence%20em%20*{{ profile.plan_due_date|date:'d/m/Y'|urlencode }}*.%20Abraços%20da%20Barbearia%20Benx!{% else %}Olá%20*{{ profile.user.first_name|urlencode }}*%2C%20notamos%20que%20a%20mensalidade%20do%20seu%20plano%20*{{ profile.plan.name|urlencode }}*%20(R%24%20{{ profile.plan.price }})%20está%20pendente/vencida.%20Por%20favor%2C%20entre%20em%20contato%20conosco%20para%20regularizar.%20Abraços%2C%20Barbearia%20Benx!{% endif %}{% else %}Olá%20*{{ profile.user.first_name|urlencode }}*%2C%20passando%20para%20lembrar%20do%20seu%20corte%20de%20cabelo!%20Faz%20um%20tempo%20que%20não%20vemos%20você.%20Agende%20um%20horário%20pelo%20nosso%20portal%20ou%20venha%20nos%20visitar!%20Abraços%2C%20Barbearia%20Benx!{% endif %}" 
+                                            <a href="https://wa.me/{{ profile.phone }}?text={% if profile.plan %}{% if profile.plan_active %}Olá%20*{{ profile.user.first_name|urlencode }}*%2C%20passando%20para%20lembrar%20que%20a%20mensalidade%20do%20seu%20plano%20*{{ profile.plan.name|urlencode }}*%20(R%24%20{{ profile.plan.price }})%20vence%20em%20*{{ profile.plan_due_date|date:'d/m/Y'|urlencode }}*.%20Abraços%20da%20Barbearia%20BarberHub!{% else %}Olá%20*{{ profile.user.first_name|urlencode }}*%2C%20notamos%20que%20a%20mensalidade%20do%20seu%20plano%20*{{ profile.plan.name|urlencode }}*%20(R%24%20{{ profile.plan.price }})%20está%20pendente/vencida.%20Por%20favor%2C%20entre%20em%20contato%20conosco%20para%20regularizar.%20Abraços%2C%20Barbearia%20BarberHub!{% endif %}{% else %}Olá%20*{{ profile.user.first_name|urlencode }}*%2C%20passando%20para%20lembrar%20do%20seu%20corte%20de%20cabelo!%20Faz%20um%20tempo%20que%20não%20vemos%20você.%20Agende%20um%20horário%20pelo%20nosso%20portal%20ou%20venha%20nos%20visitar!%20Abraços%2C%20Barbearia%20BarberHub!{% endif %}" 
                                                target="_blank" 
                                                class="p-1 rounded-md text-emerald-400 hover:bg-emerald-500/10 transition flex items-center space-x-1" 
                                                title="Enviar mensagem de cobrança/lembrete no WhatsApp">
@@ -294,6 +383,10 @@
                                             <span class="text-xs text-gray-500 italic">Sem WhatsApp</span>
                                         {% endif %}
                                         
+                                        <!-- Agendar btn -->
+                                        <a href="{% url 'barbeiro_agendar_cliente' profile.user.id %}" class="px-2.5 py-1 bg-gradient-to-r from-amberGold to-accentGold text-obsidian hover:from-accentGold hover:to-white text-xs font-bold rounded-lg transition font-title">
+                                            Agendar
+                                        </a>
                                         <!-- Edit client profile btn -->
                                         <a href="{% url 'editar_cliente_perfil' profile.id %}" class="px-2.5 py-1 bg-accentGold text-obsidian hover:bg-white hover:text-obsidian text-xs font-bold rounded-lg transition">
                                             Editar Perfil

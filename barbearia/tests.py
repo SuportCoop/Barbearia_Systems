@@ -6,12 +6,13 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Booking, Profile, Service, SubscriptionPlan
+from unittest import mock
+from .models import Barbershop, Booking, Notification, Product, Profile, Service, SubscriptionPlan, ProductReservation
 
 
 class BarbeariaModelsTestCase(TestCase):
     """
-    Test cases for Barbearia database models and business logic.
+    Casos de teste para modelos de banco de dados e lógica de negócios da Barbearia.
     """
 
     def setUp(self):
@@ -56,7 +57,7 @@ class BarbeariaModelsTestCase(TestCase):
 
     def test_booking_creation_and_duplication(self):
         """
-        Tests booking creation and asserts double booking prevention.
+        Testa a criação de agendamentos e valida a prevenção de agendamento duplicado.
         """
         today = timezone.localdate()
         time_slot = timezone.datetime.strptime("14:00", "%H:%M").time()
@@ -85,8 +86,8 @@ class BarbeariaModelsTestCase(TestCase):
 
     def test_barber_monthly_revenue_calculation(self):
         """
-        Tests correct monthly revenue computation for a barber
-        including completed bookings and active plan subscriptions.
+        Testa o cálculo correto do faturamento mensal de um barbeiro,
+        incluindo agendamentos concluídos e mensalidades de planos ativos.
         """
         today = timezone.localdate()
         time_slot1 = timezone.datetime.strptime("09:00", "%H:%M").time()
@@ -137,7 +138,7 @@ class BarbeariaModelsTestCase(TestCase):
 
 class BarbeariaPermissionsTestCase(TestCase):
     """
-    Test cases for user role page access restrictions.
+    Casos de teste para restrições de acesso a páginas com base na função do usuário.
     """
 
     def setUp(self):
@@ -155,7 +156,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_client_cannot_access_barber_dashboard(self):
         """
-        Verify client is denied access (returns 403) to barber dashboard.
+        Verifica se o cliente tem acesso negado (retorna 403) ao painel do barbeiro.
         """
         self.client_user = User.objects.get(username="caio_client")
         self.client_profile = self.client_user.profile
@@ -176,7 +177,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_barber_can_access_barber_dashboard(self):
         """
-        Verify barber can access (returns 200) barber dashboard.
+        Verifica se o barbeiro pode acessar (retorna 200) o painel do barbeiro.
         """
         self.barber_logged_in = self.client.login(username="lucas_barber", password="password123")
         self.assertTrue(self.barber_logged_in)
@@ -186,7 +187,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_barber_isolation_on_booking_completion(self):
         """
-        Verify a barber cannot complete another barber's booking (returns 403).
+        Verifica se um barbeiro não pode concluir o agendamento de outro barbeiro (retorna 403).
         """
         # Create another barber
         barber2_user = User.objects.create_user(username="rodrigo_barber", password="password123")
@@ -216,7 +217,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_barber_isolation_on_plan_assignment(self):
         """
-        Verify a barber cannot edit the subscription of a client assigned to another barber.
+        Verifica se um barbeiro não pode editar a assinatura de um cliente atribuído a outro barbeiro (retorna 403).
         """
         # Create another barber
         barber2_user = User.objects.create_user(username="rodrigo_barber", password="password123")
@@ -240,7 +241,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_developer_user_crud(self):
         """
-        Verify developer can create, edit, and delete users via custom views.
+        Verifica se o desenvolvedor pode criar, editar e deletar usuários através de views personalizadas.
         """
         # Create Developer
         dev_user = User.objects.create_user(username="developer_admin", password="password123")
@@ -249,36 +250,36 @@ class BarbeariaPermissionsTestCase(TestCase):
         # Login as Developer
         self.client.login(username="developer_admin", password="password123")
 
-        # 1. Create a User
+        # 1. Create a User (Barber)
         response = self.client.post(reverse("criar_usuario"), {
             "username": "new_seeded_client",
             "first_name": "Test",
             "last_name": "Client",
-            "email": "test@benx.com",
+            "email": "test@barberhub.com",
             "phone": "11977777777",
-            "role": "CLIENTE",
+            "role": "BARBEIRO",
             "password": "newpassword123"
         })
         self.assertEqual(response.status_code, 302)  # Redirects on success
         
         new_user = User.objects.get(username="new_seeded_client")
-        self.assertEqual(new_user.profile.role, "CLIENTE")
+        self.assertEqual(new_user.profile.role, "BARBEIRO")
         self.assertEqual(new_user.profile.phone, "11977777777")
 
-        # 2. Edit the User (make them a Barbeiro)
+        # 2. Edit the User (make them a Developer)
         response = self.client.post(reverse("editar_usuario", args=[new_user.id]), {
             "username": "new_seeded_client",
             "first_name": "Test",
             "last_name": "Client",
-            "email": "test@benx.com",
+            "email": "test@barberhub.com",
             "phone": "11977777777",
-            "role": "BARBEIRO",
+            "role": "DESENVOLVEDOR",
             "password": ""  # Blank password to maintain existing
         })
         self.assertEqual(response.status_code, 302)
         
         new_user.profile.refresh_from_db()
-        self.assertEqual(new_user.profile.role, "BARBEIRO")
+        self.assertEqual(new_user.profile.role, "DESENVOLVEDOR")
 
         # 3. Delete the User
         response = self.client.get(reverse("deletar_usuario", args=[new_user.id]))
@@ -290,7 +291,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_barber_can_edit_own_client_profile(self):
         """
-        Verify a barber can successfully edit the profile of a client assigned to them.
+        Verifica se um barbeiro pode editar com sucesso o perfil de um cliente atribuído a ele.
         """
         # Assign client to Barber 1 (lucas_barber)
         client_profile = self.client_user.profile
@@ -320,7 +321,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_barber_cannot_edit_other_client_profile(self):
         """
-        Verify a barber receives 403 when trying to edit the profile of a client assigned to another barber.
+        Verifica se um barbeiro recebe 403 ao tentar editar o perfil de um cliente atribuído a outro barbeiro.
         """
         # Create Barber 2
         barber2_user = User.objects.create_user(username="rodrigo_barber", password="password123")
@@ -348,7 +349,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_barber_can_edit_own_booking(self):
         """
-        Verify a barber can successfully edit/reschedule an appointment assigned to them.
+        Verifica se um barbeiro pode editar/reagendar com sucesso um compromisso atribuído a ele.
         """
         # Create service and booking for Barber 1
         service = Service.objects.create(name="Corte", price=decimal.Decimal("50.00"), duration_minutes=30)
@@ -382,7 +383,7 @@ class BarbeariaPermissionsTestCase(TestCase):
 
     def test_barber_cannot_edit_other_booking(self):
         """
-        Verify a barber receives 403 when trying to edit/reschedule an appointment assigned to another barber.
+        Verifica se um barbeiro recebe 403 ao tentar editar/reagendar um compromisso atribuído a outro barbeiro.
         """
         # Create Barber 2
         barber2_user = User.objects.create_user(username="rodrigo_barber", password="password123")
@@ -416,8 +417,8 @@ class BarbeariaPermissionsTestCase(TestCase):
 
 class BarbeariaDailyRevenueAndCrossNotificationsTestCase(TestCase):
     """
-    Test cases for today's completed billing metric and cross-notifications
-    triggered during booking, cancellation, and updates.
+    Casos de teste para a métrica de faturamento concluído hoje e notificações cruzadas
+    disparadas durante o agendamento, cancelamento e atualizações.
     """
 
     def setUp(self):
@@ -453,7 +454,7 @@ class BarbeariaDailyRevenueAndCrossNotificationsTestCase(TestCase):
 
     def test_barber_daily_revenue_calculation(self):
         """
-        Verify today's completed billing only aggregates completed bookings on today's date.
+        Verifica se o faturamento concluído de hoje apenas agrega os agendamentos concluídos na data de hoje.
         """
         today = timezone.localdate()
         yesterday = today - timezone.timedelta(days=1)
@@ -501,7 +502,7 @@ class BarbeariaDailyRevenueAndCrossNotificationsTestCase(TestCase):
 
     def test_notification_on_booking_creation_by_client(self):
         """
-        Verify that scheduling a cut creates a notification for the barber.
+        Verifica se o agendamento de um corte cria uma notificação para o barbeiro.
         """
         self.client.login(username="caio_client", password="password123")
         today = timezone.localdate()
@@ -525,7 +526,7 @@ class BarbeariaDailyRevenueAndCrossNotificationsTestCase(TestCase):
 
     def test_notification_on_booking_cancellation_by_client(self):
         """
-        Verify that cancellation of a booking by a client sends a notification to the barber.
+        Verifica se o cancelamento de um agendamento por um cliente envia uma notificação para o barbeiro.
         """
         today = timezone.localdate()
         time_slot = timezone.datetime.strptime("14:00", "%H:%M").time()
@@ -548,7 +549,7 @@ class BarbeariaDailyRevenueAndCrossNotificationsTestCase(TestCase):
 
     def test_notification_on_booking_cancellation_by_barber(self):
         """
-        Verify that cancellation of a booking by the barber sends a notification to the client.
+        Verifica se o cancelamento de um agendamento pelo barbeiro envia uma notificação para o cliente.
         """
         today = timezone.localdate()
         time_slot = timezone.datetime.strptime("14:00", "%H:%M").time()
@@ -572,7 +573,7 @@ class BarbeariaDailyRevenueAndCrossNotificationsTestCase(TestCase):
 
     def test_notification_on_booking_reschedule_by_barber(self):
         """
-        Verify that editing/rescheduling booking date or time by a barber triggers a notification for the client.
+        Verifica se a edição/reagendamento da data ou hora do agendamento por um barbeiro dispara uma notificação para o cliente.
         """
         today = timezone.localdate()
         time_slot = timezone.datetime.strptime("14:00", "%H:%M").time()
@@ -608,8 +609,8 @@ class BarbeariaDailyRevenueAndCrossNotificationsTestCase(TestCase):
 
     def test_barber_client_creation_and_auto_assignment(self):
         """
-        Verify that a barber can register a new client and it is automatically
-        assigned to their portfolio.
+        Verifica se um barbeiro pode cadastrar um novo cliente e se ele é automaticamente
+        vinculado à sua carteira.
         """
         self.client.login(username="lucas_barber", password="password123")
         
@@ -632,3 +633,482 @@ class BarbeariaDailyRevenueAndCrossNotificationsTestCase(TestCase):
         self.assertEqual(profile.role, "CLIENTE")
         self.assertEqual(profile.phone, "11966667777")
         self.assertEqual(profile.assigned_barber, self.barber_user)
+
+    def test_client_with_assigned_barber_sees_only_that_barber(self):
+        """
+        Verifica se um cliente com um barbeiro associado apenas consegue ver/agendar aquele barbeiro.
+        """
+        # Create a second barber
+        barber2 = User.objects.create_user(username="rodrigo_barber", password="password123")
+        Profile.objects.create(user=barber2, role="BARBEIRO")
+
+        # Verify client is assigned to self.barber_user ("lucas_barber")
+        self.assertEqual(self.client_user.profile.assigned_barber, self.barber_user)
+
+        self.client.login(username="caio_client", password="password123")
+        response = self.client.get(reverse("agendar"))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert only self.barber_user is in the form queryset choices
+        barber_queryset = response.context["form"].fields["barber"].queryset
+        self.assertEqual(barber_queryset.count(), 1)
+        self.assertIn(self.barber_user, barber_queryset)
+        self.assertNotIn(barber2, barber_queryset)
+
+    def test_client_without_assigned_barber_sees_all_barbers(self):
+        """
+        Verifica se um cliente sem barbeiro associado vê todos os barbeiros disponíveis no formulário de agendamento.
+        """
+        # Create a second barber
+        barber2 = User.objects.create_user(username="rodrigo_barber", password="password123")
+        Profile.objects.create(user=barber2, role="BARBEIRO")
+
+        # Unassign client's barber
+        profile = self.client_user.profile
+        profile.assigned_barber = None
+        profile.save()
+
+        self.client.login(username="caio_client", password="password123")
+        response = self.client.get(reverse("agendar"))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert both barbers are present in form choices
+        barber_queryset = response.context["form"].fields["barber"].queryset
+        self.assertEqual(barber_queryset.count(), 2)
+        self.assertIn(self.barber_user, barber_queryset)
+        self.assertIn(barber2, barber_queryset)
+
+    def test_barber_dashboard_weekly_revenue_and_mensalistas(self):
+        """
+        Verifica se o painel do barbeiro calcula corretamente o número de clientes mensalistas
+        ativos e o faturamento do serviço concluído da semana atual.
+        """
+        # Create active subscription plan for the client
+        plan = SubscriptionPlan.objects.create(
+            name="Plano VIP",
+            price=decimal.Decimal("100.00"),
+            description=" VIP",
+            features="VIP",
+            created_by=self.barber_user
+        )
+        self.client_user.profile.plan = plan
+        self.client_user.profile.plan_active = True
+        self.client_user.profile.save()
+
+        # Create booking completed today (this week)
+        today = timezone.localdate()
+        Booking.objects.create(
+            client=self.client_user,
+            barber=self.barber_user,
+            service=self.service,
+            date=today,
+            time=timezone.datetime.strptime("10:00", "%H:%M").time(),
+            status="CONCLUIDO"
+        )
+
+        # Create booking completed 8 days ago (last week)
+        last_week = today - timezone.timedelta(days=8)
+        Booking.objects.create(
+            client=self.client_user,
+            barber=self.barber_user,
+            service=self.service,
+            date=last_week,
+            time=timezone.datetime.strptime("11:00", "%H:%M").time(),
+            status="CONCLUIDO"
+        )
+
+        self.client.login(username="lucas_barber", password="password123")
+        response = self.client.get(reverse("barbeiro_dashboard"))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert metrics are correctly calculated
+        self.assertEqual(response.context["mensalistas_count"], 1)
+        self.assertEqual(response.context["weekly_revenue"], decimal.Decimal("50.00"))  # Only today's booking is this week
+
+    @mock.patch("requests.post")
+    def test_send_notifications_management_command(self, mock_post):
+        """
+        Verifica se a chamada do comando send_notifications filtra os agendamentos
+        e invoca a API de WhatsApp da Codesflow.
+        """
+        from django.core.management import call_command
+        from unittest import mock
+
+        # Mock a successful API response
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+
+        # Create a booking for today
+        today = timezone.localdate()
+        booking = Booking.objects.create(
+            client=self.client_user,
+            barber=self.barber_user,
+            service=self.service,
+            date=today,
+            time=timezone.datetime.strptime("09:00", "%H:%M").time(),
+            status="AGENDADO"
+        )
+
+        # Check phone number is cleaned and starts with 55
+        self.client_user.profile.phone = "11988888888"
+        self.client_user.profile.save()
+
+        # Run command
+        call_command("send_notifications")
+
+        # Verify API request was made and flags were updated
+        self.assertTrue(mock_post.called)
+        booking.refresh_from_db()
+        self.assertTrue(booking.notified_day_of)
+
+
+class NewFeaturesTestCase(TestCase):
+    def setUp(self):
+        self.barbershop = Barbershop.objects.create(name="Test Shop")
+        self.user = User.objects.create_user(username="test_user", password="password123")
+        self.profile = Profile.objects.create(user=self.user, role="BARBEIRO", barbershop=self.barbershop, must_change_password=True)
+        self.product = Product.objects.create(name="Test Product", price=10.00, stock=5, barbershop=self.barbershop)
+        self.client_user = User.objects.create_user(username="client_user", password="password123")
+        self.client_profile = Profile.objects.create(user=self.client_user, role="CLIENTE", barbershop=self.barbershop)
+
+    def test_forced_password_change_middleware(self):
+        # Log in the user who must change password
+        self.client.login(username="test_user", password="password123")
+        # Try to access dashboard
+        response = self.client.get(reverse("barbeiro_dashboard"))
+        # Should redirect to password change page
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("alterar-senha", response.url)
+
+    def test_product_reservation_flow(self):
+        # Log in the client
+        self.client.login(username="client_user", password="password123")
+        # Reserve product
+        response = self.client.post(reverse("reservar_produto", args=[self.product.id]))
+        # Should redirect back to dashboard
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify product stock decremented
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 4)
+
+        # Verify reservation was created
+        res = ProductReservation.objects.get(client=self.client_user, product=self.product)
+        self.assertEqual(res.status, "PENDENTE")
+        self.assertEqual(res.quantity, 1)
+
+
+class SchedulingSynchronizationTestCase(TestCase):
+    """
+    Casos de teste para sincronização de agendamentos, lógica de disponibilidade,
+    prevenção de sobreposição e agendamento em nome de clientes.
+    """
+    def setUp(self):
+        # Cria Barbeiro
+        self.barber = User.objects.create_user(username="barber_lucas", password="password123")
+        Profile.objects.create(user=self.barber, role="BARBEIRO", phone="11999999999")
+        
+        # Cria Cliente
+        self.client_user = User.objects.create_user(username="client_caio", password="password123")
+        Profile.objects.create(user=self.client_user, role="CLIENTE", phone="11988888888")
+        
+        # Cria Serviços com diferentes durações
+        self.service_short = Service.objects.create(name="Corte Rápido", price=30.00, duration_minutes=30)
+        self.service_long = Service.objects.create(name="Combo Completo", price=70.00, duration_minutes=60)
+        
+    def test_get_available_slots_logic(self):
+        from barbearia.views import get_available_slots
+        from datetime import date, time as dt_time
+        
+        today = date(2026, 7, 1)
+        
+        # 1. Inicialmente, todos os slots das 08:00 às 20:00 devem estar livres (24 slots de 30 mins)
+        slots = get_available_slots(self.barber, today, service_duration=30)
+        self.assertEqual(len(slots), 24)
+        self.assertIn("08:00", slots)
+        self.assertIn("19:30", slots)
+        
+        # 2. Adiciona um agendamento AGENDADO às 10:00 (duração de 30 mins)
+        Booking.objects.create(
+            client=self.client_user,
+            barber=self.barber,
+            service=self.service_short,
+            date=today,
+            time=dt_time(10, 0),
+            status="AGENDADO"
+        )
+        
+        slots = get_available_slots(self.barber, today, service_duration=30)
+        self.assertEqual(len(slots), 23)
+        self.assertNotIn("10:00", slots)
+        self.assertIn("09:30", slots)
+        self.assertIn("10:30", slots)
+        
+        # 3. Solicitando a disponibilidade de slot de serviço de 60 minutos.
+        # Como 10:00 está ocupado:
+        # - O slot 09:30 NÃO deve estar disponível porque se sobreporia a 10:00 (começa 09:30, termina 10:30, ocupado).
+        # - O slot 10:00 está ocupado.
+        # Portanto, tanto 09:30 quanto 10:00 devem ser excluídos!
+        slots_60 = get_available_slots(self.barber, today, service_duration=60)
+        self.assertNotIn("09:30", slots_60)
+        self.assertNotIn("10:00", slots_60)
+        self.assertIn("09:00", slots_60)
+        self.assertIn("10:30", slots_60)
+
+    def test_availability_api_endpoint(self):
+        self.client.login(username="client_caio", password="password123")
+        today_str = "2026-07-01"
+        
+        response = self.client.get(reverse("horarios_disponiveis"), {
+            "barber_id": self.barber.id,
+            "date": today_str,
+            "service_id": self.service_short.id
+        })
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("slots", data)
+        self.assertEqual(len(data["slots"]), 24)
+
+    def test_booking_form_validation(self):
+        from barbearia.forms import BookingForm
+        from datetime import date, time as dt_time
+        
+        today = date(2026, 7, 1)
+        
+        # Cria um agendamento às 14:00 (duração 60 mins)
+        Booking.objects.create(
+            client=self.client_user,
+            barber=self.barber,
+            service=self.service_long,
+            date=today,
+            time=dt_time(14, 0),
+            status="AGENDADO"
+        )
+        
+        # Tenta agendar às 14:30 (deve falhar devido a sobreposição)
+        form_data = {
+            "barber": self.barber.id,
+            "service": self.service_short.id,
+            "date": today,
+            "time": "14:30",
+            "notes": ""
+        }
+        form = BookingForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn("conflita com outro agendamento", form.errors["__all__"][0])
+        
+        # Tenta um horário livre às 15:00 (deve ter sucesso)
+        form_data_valid = {
+            "barber": self.barber.id,
+            "service": self.service_short.id,
+            "date": today,
+            "time": "15:00",
+            "notes": ""
+        }
+        form_valid = BookingForm(data=form_data_valid)
+        self.assertTrue(form_valid.is_valid())
+
+    def test_barber_booking_on_behalf_of_client(self):
+        # Faz login como Barbeiro
+        self.client.login(username="barber_lucas", password="password123")
+        today_str = "2026-07-01"
+        
+        # Envia agendamento
+        response = self.client.post(reverse("barbeiro_agendar"), {
+            "client": self.client_user.id,
+            "barber": self.barber.id,
+            "service": self.service_short.id,
+            "date": today_str,
+            "time": "11:30",
+            "notes": "Agendado pelo barbeiro"
+        })
+        self.assertEqual(response.status_code, 302) # Redireciona para o painel do barbeiro
+        
+        # Verifica se o agendamento foi criado
+        booking = Booking.objects.get(
+            client=self.client_user,
+            barber=self.barber,
+            date=today_str,
+            time="11:30:00"
+        )
+        self.assertEqual(booking.notes, "Agendado pelo barbeiro")
+
+    @mock.patch("requests.post")
+    def test_send_booking_confirmation_request(self, mock_post):
+        from barbearia.tasks import send_booking_confirmation_request
+        from unittest import mock
+        
+        # Simula resposta da API
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+        
+        # Cria agendamento
+        booking = Booking.objects.create(
+            client=self.client_user,
+            barber=self.barber,
+            service=self.service_short,
+            date=timezone.localdate(),
+            time=timezone.datetime.strptime("17:00", "%H:%M").time(),
+            status="AGENDADO"
+        )
+        
+        # Define número de telefone
+        self.client_user.profile.phone = "11988888888"
+        self.client_user.profile.save()
+        
+        # Executa a função
+        success = send_booking_confirmation_request(booking)
+        self.assertTrue(success)
+        self.assertTrue(mock_post.called)
+
+    def test_barber_custom_schedule_and_break_slots(self):
+        from barbearia.views import get_available_slots
+        from barbearia.forms import BookingForm
+        from datetime import date, time as dt_time
+        
+        today = date(2026, 8, 1)
+        
+        # Configura expediente customizado e pausa para o barbeiro
+        profile = self.barber.profile
+        profile.work_start = dt_time(9, 0)
+        profile.work_end = dt_time(17, 0)
+        profile.break_start = dt_time(12, 0)
+        profile.break_end = dt_time(13, 0)
+        profile.save()
+        
+        # 1. Testa a lógica de disponibilidade (get_available_slots)
+        slots = get_available_slots(self.barber, today, service_duration=30)
+        
+        # Total de slots deve ser: (17:00 - 09:00 = 8 horas = 16 slots) - (2 slots da pausa de 1 hora) = 14 slots
+        self.assertEqual(len(slots), 14)
+        
+        # Verifica limites de expediente
+        self.assertNotIn("08:00", slots)
+        self.assertNotIn("08:30", slots)
+        self.assertIn("09:00", slots)
+        self.assertIn("16:30", slots)
+        self.assertNotIn("17:00", slots)
+        
+        # Verifica exclusão de pausa
+        self.assertNotIn("12:00", slots)
+        self.assertNotIn("12:30", slots)
+        self.assertIn("11:30", slots)
+        self.assertIn("13:00", slots)
+        
+        # 2. Testa a validação no formulário BookingForm
+        # Agendamento fora do expediente (08:30)
+        form_data_outside = {
+            "barber": self.barber.id,
+            "service": self.service_short.id,
+            "date": today,
+            "time": "08:30",
+            "notes": ""
+        }
+        form_outside = BookingForm(data=form_data_outside)
+        self.assertFalse(form_outside.is_valid())
+        self.assertIn("dentro do expediente do barbeiro", form_outside.errors["__all__"][0])
+        
+        # Agendamento durante a pausa (12:00)
+        form_data_break = {
+            "barber": self.barber.id,
+            "service": self.service_short.id,
+            "date": today,
+            "time": "12:00",
+            "notes": ""
+        }
+        form_break = BookingForm(data=form_data_break)
+        self.assertFalse(form_break.is_valid())
+        self.assertIn("conflita com o intervalo de pausa do barbeiro", form_break.errors["__all__"][0])
+        
+        # Agendamento válido (13:00)
+        form_data_valid = {
+            "barber": self.barber.id,
+            "service": self.service_short.id,
+            "date": today,
+            "time": "13:00",
+            "notes": ""
+        }
+        form_valid = BookingForm(data=form_data_valid)
+        self.assertTrue(form_valid.is_valid())
+
+    @mock.patch("requests.post")
+    def test_send_subscription_billing_reminders(self, mock_post):
+        from barbearia.tasks import send_subscription_billing_reminders
+        from datetime import date, time as dt_time, timedelta
+        from unittest import mock
+        
+        # Simula resposta de sucesso da API
+        mock_response = mock.Mock()
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+        
+        # Cria um plano de assinatura para os testes
+        plan = SubscriptionPlan.objects.create(
+            name="Plano Mensalista Teste",
+            price=decimal.Decimal("90.00"),
+            description="Plano de Teste",
+            features="Teste",
+            created_by=self.barber
+        )
+        
+        today = timezone.localdate()
+        
+        # 1. Cliente 1: Vencimento em 3 dias (Deve ser notificado)
+        user1 = User.objects.create_user(username="client_billing_3d", password="password123")
+        profile1 = Profile.objects.create(
+            user=user1,
+            role="CLIENTE",
+            phone="11911111111",
+            plan=plan,
+            plan_active=True,
+            plan_due_date=today + timedelta(days=3)
+        )
+        
+        # 2. Cliente 2: Vencimento hoje (Deve ser notificado)
+        user2 = User.objects.create_user(username="client_billing_today", password="password123")
+        profile2 = Profile.objects.create(
+            user=user2,
+            role="CLIENTE",
+            phone="11922222222",
+            plan=plan,
+            plan_active=True,
+            plan_due_date=today
+        )
+        
+        # 3. Cliente 3: Vencimento ontem (Deve ser notificado como atrasado)
+        user3 = User.objects.create_user(username="client_billing_yesterday", password="password123")
+        profile3 = Profile.objects.create(
+            user=user3,
+            role="CLIENTE",
+            phone="11933333333",
+            plan=plan,
+            plan_active=True,
+            plan_due_date=today - timedelta(days=1)
+        )
+        
+        # 4. Cliente 4: Vencimento em outro dia (Não deve ser notificado)
+        user4 = User.objects.create_user(username="client_billing_other", password="password123")
+        profile4 = Profile.objects.create(
+            user=user4,
+            role="CLIENTE",
+            phone="11944444444",
+            plan=plan,
+            plan_active=True,
+            plan_due_date=today + timedelta(days=5)
+        )
+        
+        # Executa a tarefa de cobranças
+        sent_count = send_subscription_billing_reminders()
+        
+        # Deve ter enviado 3 notificações via WhatsApp
+        self.assertEqual(sent_count, 3)
+        self.assertEqual(mock_post.call_count, 3)
+        
+        # Verifica se as notificações internas foram devidamente salvas no BD
+        self.assertTrue(Notification.objects.filter(client=user1, message__contains="vence em 3 dias").exists())
+        self.assertTrue(Notification.objects.filter(client=user2, message__contains="vence hoje").exists())
+        self.assertTrue(Notification.objects.filter(client=user3, message__contains="venceu ontem").exists())
+        self.assertFalse(Notification.objects.filter(client=user4).exists())
+

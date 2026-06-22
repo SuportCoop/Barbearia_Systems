@@ -1,10 +1,24 @@
 from django.contrib.auth.models import User
 from django.db import models
+from datetime import time as datetime_time
+
+
+class Barbershop(models.Model):
+    """
+    Unidades de negócio da barbearia (tenants/filiais).
+    """
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=200, blank=True, default="")
+    phone = models.CharField(max_length=20, blank=True, default="")
+    logo_url = models.URLField(max_length=500, blank=True, default="")
+
+    def __str__(self):
+        return self.name
 
 
 class SubscriptionPlan(models.Model):
     """
-    Subscription plans created by barbers/admins and assigned to clients.
+    Planos de assinatura criados por barbeiros/administradores e atribuídos a clientes.
     """
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -23,14 +37,14 @@ class SubscriptionPlan(models.Model):
 
     def get_features_list(self):
         """
-        Splits features text by lines to render as bullet points.
+        Divide o texto de recursos por linhas para renderizar como tópicos.
         """
         return [f.strip() for f in self.features.split("\n") if f.strip()]
 
 
 class Profile(models.Model):
     """
-    Extends standard Django User model with roles, billing, and plans.
+    Estende o modelo padrão de usuário do Django com funções, faturamento e planos.
     """
     ROLE_CHOICES = (
         ("CLIENTE", "Cliente"),
@@ -65,6 +79,18 @@ class Profile(models.Model):
     )
     plan_active = models.BooleanField(default=False)
     plan_due_date = models.DateField(null=True, blank=True)
+    barbershop = models.ForeignKey(
+        Barbershop,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="profiles"
+    )
+    must_change_password = models.BooleanField(default=False)
+    work_start = models.TimeField(default=datetime_time(8, 0), verbose_name="Início do Expediente")
+    work_end = models.TimeField(default=datetime_time(20, 0), verbose_name="Fim do Expediente")
+    break_start = models.TimeField(null=True, blank=True, verbose_name="Início da Pausa")
+    break_end = models.TimeField(null=True, blank=True, verbose_name="Fim da Pausa")
 
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} ({self.role})"
@@ -72,11 +98,18 @@ class Profile(models.Model):
 
 class Service(models.Model):
     """
-    Services provided by the barbershop.
+    Serviços oferecidos pela barbearia.
     """
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     duration_minutes = models.IntegerField(default=30)
+    barbershop = models.ForeignKey(
+        Barbershop,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="services"
+    )
 
     def __str__(self):
         return f"{self.name} (R$ {self.price})"
@@ -84,7 +117,7 @@ class Service(models.Model):
 
 class Booking(models.Model):
     """
-    Booking / scheduling records.
+    Registros de agendamentos / reservas.
     """
     STATUS_CHOICES = (
         ("AGENDADO", "Agendado"),
@@ -111,6 +144,15 @@ class Booking(models.Model):
         default="AGENDADO"
     )
     notes = models.TextField(blank=True, default="")
+    notified_day_of = models.BooleanField(default=False)
+    notified_one_hour_before = models.BooleanField(default=False)
+    barbershop = models.ForeignKey(
+        Barbershop,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="bookings"
+    )
 
     class Meta:
         ordering = ["date", "time"]
@@ -121,13 +163,20 @@ class Booking(models.Model):
 
 class Product(models.Model):
     """
-    Products for sale in the barbershop.
+    Produtos para venda na barbearia.
     """
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.IntegerField(default=0)
     description = models.TextField(blank=True, default="")
     image_url = models.URLField(max_length=500, blank=True, default="")
+    barbershop = models.ForeignKey(
+        Barbershop,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="products"
+    )
 
     def __str__(self):
         return f"{self.name} (R$ {self.price}) - Estoque: {self.stock}"
@@ -135,7 +184,7 @@ class Product(models.Model):
 
 class Notification(models.Model):
     """
-    System notifications / alerts for clients.
+    Notificações do sistema / alertas para os clientes.
     """
     client = models.ForeignKey(
         User,
@@ -151,3 +200,39 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notificação para {self.client.username}: {self.message[:30]}"
+
+
+class ProductReservation(models.Model):
+    """
+    Reservas de produtos feitas por clientes para retirada posterior.
+    """
+    STATUS_CHOICES = (
+        ("PENDENTE", "Pendente Retirada"),
+        ("CONCLUIDO", "Concluído/Pago"),
+        ("CANCELADO", "Cancelado"),
+    )
+
+    client = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="product_reservations"
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="product_reservations"
+    )
+    quantity = models.PositiveIntegerField(default=1)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="PENDENTE"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.client.username} reservou {self.product.name} (Qtd: {self.quantity})"

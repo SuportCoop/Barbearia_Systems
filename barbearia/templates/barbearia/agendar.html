@@ -1,6 +1,6 @@
 {% extends "barbearia/base.html" %}
 
-{% block title %}Agendar Horário - Barbearia Benx{% endblock %}
+{% block title %}Agendar Horário - BarberHub{% endblock %}
 
 {% block content %}
 <div class="max-w-xl mx-auto my-6">
@@ -31,6 +31,24 @@
                         <p>{{ error }}</p>
                     {% endfor %}
                 </div>
+            {% endif %}
+
+            <!-- Cliente Select (only if present, for Barbers/Admins) -->
+            {% if form.client %}
+            <div>
+                <label for="id_client" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Cliente</label>
+                <select name="client" id="id_client" required
+                        class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm">
+                    {% for client_choice in form.fields.client.choices %}
+                        <option value="{{ client_choice.0 }}" {% if form.client.value|stringformat:"s" == client_choice.0|stringformat:"s" %}selected{% endif %}>
+                            {{ client_choice.1 }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.client.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.client.errors.0 }}</span>
+                {% endif %}
+            </div>
             {% endif %}
 
             <!-- Barbeiro Select -->
@@ -65,11 +83,11 @@
                 {% endif %}
             </div>
 
-            <!-- Date & Time Row -->
-            <div class="grid grid-cols-2 gap-4">
+            <!-- Date and Time slots -->
+            <div class="space-y-4">
                 <!-- Date -->
                 <div>
-                    <label for="id_date" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Data</label>
+                    <label for="id_date" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Data do Agendamento</label>
                     <input type="date" name="date" id="id_date" required
                            class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
                            value="{{ form.date.value|default:'' }}">
@@ -78,15 +96,21 @@
                     {% endif %}
                 </div>
 
-                <!-- Time -->
-                <div>
-                    <label for="id_time" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Horário</label>
-                    <input type="time" name="time" id="id_time" required
-                           class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
-                           value="{{ form.time.value|default:'' }}">
-                    {% if form.time.errors %}
-                        <span class="text-xs text-red-400 mt-1 block">{{ form.time.errors.0 }}</span>
-                    {% endif %}
+                <!-- Hidden original time field -->
+                <input type="hidden" name="time" id="id_time" value="{{ form.time.value|default:'' }}">
+                {% if form.time.errors %}
+                    <div class="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl mt-1">
+                        {{ form.time.errors.0 }}
+                    </div>
+                {% endif %}
+
+                <!-- Dynamic Time Slots Container -->
+                <div id="time-slots-container" class="hidden space-y-2">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400">Escolha o Horário</label>
+                    <div id="time-slots-grid" class="grid grid-cols-4 gap-2">
+                        <!-- Loaded dynamically via JS -->
+                    </div>
+                    <p id="no-slots-msg" class="text-xs text-amberGold italic hidden">Nenhum horário disponível para este barbeiro nesta data. Tente outro dia.</p>
                 </div>
             </div>
 
@@ -106,6 +130,133 @@
                 Confirmar Agendamento
             </button>
         </form>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const barberSelect = document.getElementById("id_barber");
+                const serviceSelect = document.getElementById("id_service");
+                const dateInput = document.getElementById("id_date");
+                const timeInput = document.getElementById("id_time");
+                
+                const slotsContainer = document.getElementById("time-slots-container");
+                const slotsGrid = document.getElementById("time-slots-grid");
+                const noSlotsMsg = document.getElementById("no-slots-msg");
+                
+                const excludeBookingId = "{{ form.instance.id|default:'' }}";
+                
+                // Initial selected time (if editing)
+                let selectedTime = timeInput.value;
+                if (selectedTime && selectedTime.split(":").length > 2) {
+                    selectedTime = selectedTime.substring(0, 5);
+                    timeInput.value = selectedTime;
+                }
+
+                // Set min date to today to prevent selecting past dates (at UI level)
+                const todayStr = new Date().toISOString().split("T")[0];
+                if (!excludeBookingId) {
+                    dateInput.min = todayStr;
+                }
+
+                function fetchAvailableSlots() {
+                    const barberId = barberSelect.value;
+                    const dateVal = dateInput.value;
+                    const serviceId = serviceSelect.value;
+                    
+                    if (!barberId || !dateVal || !serviceId) {
+                        slotsContainer.classList.add("hidden");
+                        return;
+                    }
+                    
+                    // Show loading state
+                    slotsContainer.classList.remove("hidden");
+                    slotsGrid.innerHTML = `
+                        <div class="col-span-4 py-4 text-center text-xs text-gray-500">
+                            <svg class="animate-spin h-5 w-5 mx-auto text-accentGold mb-1" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Buscando horários disponíveis...
+                        </div>
+                    `;
+                    noSlotsMsg.classList.add("hidden");
+                    
+                    let url = `/api/horarios-disponiveis/?barber_id=${barberId}&date=${dateVal}&service_id=${serviceId}`;
+                    if (excludeBookingId) {
+                        url += `&exclude_booking_id=${excludeBookingId}`;
+                    }
+                    
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            slotsGrid.innerHTML = "";
+                            const slots = data.slots || [];
+                            
+                            // If editing, make sure the original time is in the slots list
+                            if (excludeBookingId && selectedTime && !slots.includes(selectedTime)) {
+                                slots.push(selectedTime);
+                                slots.sort();
+                            }
+                            
+                            if (slots.length === 0) {
+                                noSlotsMsg.classList.remove("hidden");
+                                return;
+                            }
+                            
+                            slots.forEach(timeSlot => {
+                                const btn = document.createElement("button");
+                                btn.type = "button";
+                                btn.className = "py-2.5 px-3 text-center border rounded-xl text-xs font-semibold transition-all transform active:scale-95 duration-150 cursor-pointer ";
+                                
+                                if (timeSlot === selectedTime) {
+                                    btn.className += "bg-gradient-to-r from-amberGold to-accentGold text-obsidian border-transparent shadow-lg shadow-accentGold/20 font-bold scale-105";
+                                } else {
+                                    btn.className += "bg-obsidian-light/30 text-gray-300 border-white/5 hover:border-accentGold/50 hover:bg-accentGold/5";
+                                }
+                                
+                                btn.textContent = timeSlot;
+                                
+                                btn.addEventListener("click", function() {
+                                    const buttons = slotsGrid.querySelectorAll("button");
+                                    buttons.forEach(b => {
+                                        b.className = "py-2.5 px-3 text-center border rounded-xl text-xs font-semibold transition-all transform active:scale-95 duration-150 cursor-pointer bg-obsidian-light/30 text-gray-300 border-white/5 hover:border-accentGold/50 hover:bg-accentGold/5";
+                                    });
+                                    
+                                    btn.className = "py-2.5 px-3 text-center border rounded-xl text-xs font-semibold transition-all transform active:scale-95 duration-150 cursor-pointer bg-gradient-to-r from-amberGold to-accentGold text-obsidian border-transparent shadow-lg shadow-accentGold/20 font-bold scale-105";
+                                    
+                                    selectedTime = timeSlot;
+                                    timeInput.value = timeSlot;
+                                });
+                                
+                                slotsGrid.appendChild(btn);
+                            });
+                        })
+                        .catch(err => {
+                            console.error("Erro ao buscar horários:", err);
+                            slotsGrid.innerHTML = `
+                                <div class="col-span-4 py-2 text-center text-xs text-red-400">
+                                    Erro ao carregar horários. Tente recarregar a página.
+                                </div>
+                            `;
+                        });
+                }
+                
+                barberSelect.addEventListener("change", function() {
+                    selectedTime = "";
+                    timeInput.value = "";
+                    fetchAvailableSlots();
+                });
+                serviceSelect.addEventListener("change", fetchAvailableSlots);
+                dateInput.addEventListener("change", function() {
+                    selectedTime = "";
+                    timeInput.value = "";
+                    fetchAvailableSlots();
+                });
+                
+                if (barberSelect.value && dateInput.value && serviceSelect.value) {
+                    fetchAvailableSlots();
+                }
+            });
+        </script>
     </div>
 </div>
 {% endblock %}

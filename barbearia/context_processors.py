@@ -1,7 +1,7 @@
 def notifications_processor(request):
     """
-    Context processor to make unread notifications globally available
-    in all templates for authenticated users.
+    Context processor para disponibilizar notificações não lidas globalmente
+    em todos os templates para usuários autenticados.
     """
     if request.user.is_authenticated:
         unread = request.user.notifications.filter(is_read=False)

@@ -1,0 +1,92 @@
+{% extends "barbearia/base.html" %}
+
+{% block title %}{% if object %}Editar{% else %}Criar{% endif %} Barbearia - BarberHub{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto my-6">
+    
+    <a href="{% url 'dashboard_redirect' %}" class="inline-flex items-center space-x-1 text-sm text-accentGold hover:underline mb-6 transition">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Voltar ao painel</span>
+    </a>
+
+    <div class="glass-card rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-24 h-24 bg-accentGold/10 rounded-full blur-2xl"></div>
+
+        <div class="border-b border-white/5 pb-4 mb-6">
+            <h2 class="text-2xl font-bold text-white tracking-tight font-title">
+                {% if object %}Editar Barbearia: {{ object.name }}{% else %}Cadastrar Nova Barbearia{% endif %}
+            </h2>
+            <p class="text-xs text-gray-400 mt-1">Insira os detalhes e localização da barbearia parceira.</p>
+        </div>
+
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Name -->
+            <div>
+                <label for="id_name" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Nome da Barbearia</label>
+                <input type="text" name="name" id="id_name" required
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="Ex: BarberHub Matriz" value="{{ form.name.value|default:'' }}">
+                {% if form.name.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.name.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Phone -->
+            <div>
+                <label for="id_phone" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Telefone/WhatsApp</label>
+                <input type="text" name="phone" id="id_phone"
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="Ex: 5511999999999" value="{{ form.phone.value|default:'' }}">
+                {% if form.phone.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.phone.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Address -->
+            <div>
+                <label for="id_address" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Endereço Completo</label>
+                <input type="text" name="address" id="id_address"
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo" value="{{ form.address.value|default:'' }}">
+                {% if form.address.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.address.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Logo URL -->
+            <div>
+                <label for="id_logo_url" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1.5">URL do Logotipo (Imagem)</label>
+                <input type="url" name="logo_url" id="id_logo_url"
+                       class="block w-full px-3 py-2.5 bg-obsidian-light/50 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-accentGold focus:border-transparent transition text-sm"
+                       placeholder="https://..." value="{{ form.logo_url.value|default:'' }}">
+                {% if form.logo_url.errors %}
+                    <span class="text-xs text-red-400 mt-1 block">{{ form.logo_url.errors.0 }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center space-x-3 pt-2">
+                <button type="submit" class="flex-grow py-3 bg-gradient-to-r from-amberGold to-accentGold hover:from-accentGold hover:to-white text-obsidian font-bold rounded-xl transition shadow-lg hover:shadow-accentGold/20 font-title">
+                    Salvar Barbearia
+                </button>
+                <a href="{% url 'dashboard_redirect' %}" class="px-5 py-3 border border-white/10 hover:bg-white/5 text-gray-300 font-bold rounded-xl transition text-center text-sm">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

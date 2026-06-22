@@ -1,4 +1,4 @@
-const CACHE_NAME = 'benx-barbearia-cache-v1';
+const CACHE_NAME = 'barberhub-barbearia-cache-v1';
 const urlsToCache = [
   '/dashboard/',
   '/login/',
@@ -77,7 +77,7 @@ self.addEventListener('fetch', event => {
 
 // Push Notification Event (Native Push Simulation Support)
 self.addEventListener('push', event => {
-  let data = { title: 'Barbearia Benx', body: 'Lembrete de corte!' };
+  let data = { title: 'BarberHub', body: 'Lembrete de corte!' };
   
   if (event.data) {
     try {

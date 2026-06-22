@@ -42,6 +42,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'barbearia.middleware.ForcePasswordChangeMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -120,3 +121,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard_redirect'
 LOGOUT_REDIRECT_URL = 'login'
+
+# WhatsApp API configuration
+WHATSAPP_API_URL = "https://appbks.codesflow.com.br/api/messages/send"
+WHATSAPP_API_TOKEN = "your_bearer_token_here"
