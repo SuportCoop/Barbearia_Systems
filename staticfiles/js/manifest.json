@@ -1,0 +1,22 @@
+{
+  "name": "BarberHub",
+  "short_name": "BarberHub",
+  "description": "Sistema de agendamento e gerenciamento BarberHub",
+  "start_url": "/dashboard/",
+  "display": "standalone",
+  "background_color": "#0B0F19",
+  "theme_color": "#0B0F19",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=192&h=192&fit=crop",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=512&h=512&fit=crop",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
